@@ -26,7 +26,7 @@ requireNamespace("cplm")
 requireNamespace("pbapply")
 requireNamespace("DESeq")
 
-utils::globalVariables(c("cplm.data", "cplm"))
+if(getRversion() >= "3.1.0") utils::globalVariables(c("cplm.data", "cplm"))
 
 ###############################################################################
 ### Generate negative binomial distributed data matrix 
@@ -381,7 +381,7 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   #   "beta0", "p", sigma_a2", "phi". Row names are gene names; the second member of the list  
   #   consists of p-values for testing the hypothesis that sigma_a2 = 0.
   
-  suppressMessages(suppressWarnings(requireNamespace(cplm)))
+  suppressMessages(suppressWarnings(requireNamespace("cplm")))
   
   paras <- t(pbsapply(1:nrow(CountMatrix), function(x){
     CountVector <- CountMatrix[x, ]
@@ -404,14 +404,15 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
       
       para <- c(beta0, sigma_a2, p, phi)
     }else{
-      print(paste("Fitting problem for feature", x,"returning NA"))
+      print(paste("Fitting problem for feature", x, "returning NA"))
       para <- rep(NA, 4)
     }
     
     ### Fitting the reduced model for testing significance of the random effect ###
     if (test){
-      detach("package:cplm", unload=TRUE)
-      suppressMessages(suppressWarnings(requireNamespace(cplm)))
+        #     detach("package:cplm", unload=TRUE)
+      unloadNamespace("cplm")
+      suppressMessages(suppressWarnings(requireNamespace("cplm")))
       fit.red <- tryCatch({
         fit2 <- cpglm(expr ~ 1, data = dat_sub, optimizer = optimizer)
       }, error=function(err){
@@ -426,14 +427,16 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
         pval <- 0.5*pchisq(test.stat, df = 1, lower.tail = FALSE) + 
           0.5*as.numeric(test.stat == 0)
       }else{
-        print(paste("Cannot do test for feature", x,"fitting problem."))
+        print(paste("Cannot do test for feature", x, "fitting problem."))
         pval <- NA
       }
       
       para <- c(para, pval)
     }
-    detach("package:cplm", unload=TRUE)
-    suppressMessages(suppressWarnings(requireNamespace(cplm)))
+    
+    #    detach("package:cplm", unload=TRUE)
+    unloadNamespace("cplm")
+    suppressMessages(suppressWarnings(requireNamespace("cplm")))
     return(para)
   }))
   
@@ -590,24 +593,27 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 }
 
 
-#' SHORT DESCRIPTION OF GETBOOTCI
-#' 
-#' LONG DESCRIPTION OF GETBOOTCI
-#' 
-#' @param CountMatrix The data matrix; rows are features, columns are samples
-#' @param Strains The vector of strains corresponding to each sample, length = ncol(CountMatrix)
-#' @param which.features The vector of select feature numbers for which CI is desired
-#' @param num.boot Number of bootstraps
-#' @param method Which method should be used, "CP", "NB", or "VST". "VST" method bootstraps data from "NB"
-#' @param alpha The CI will be \eqn{100*(1-\alpha)}{100*(1-alpha)} percent CI
-#' @param optimizer A character string that determines which optimization routine is
-#'  to be used. Possible choices are "nlminb" (default), "L-BFGS-B", and "bobyqa".
-#' @return (i) intervals: a matrix of dimension length(which.features) x 2 containing the CIs
-#'  (ii) all.vpcs: a matrix of dimension length(which.features) x num.boot containing all
-#'  bootstrapped VPC values.
-#' @export
-GetBootCI = function(CountMatrix, Strains, which.features, num.boot, method="NB", alpha=0.05, optimizer = "nlminb"){
 
+
+
+
+
+GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
+                     method="NB", alpha=0.05, optimizer = "nlminb"){
+  ### CountMatrix: The data matrix, rows are features, columns are samples
+  ### Strains: The vector of strains corresponding to each sample, length = ncol(CountMatrix)
+  ### which.features: The vector of select feature numbers for which CI is desired
+  ### alpha: The CI will be 100*(1-alpha)% CI
+  ### num.boot: Number of bootstraps
+  ### method: Which method should be used, "CP", "NB", or "VST". "VST" method bootstraps data from "NB".
+  ### optimizer: A character string that determines which optimization routine is
+  ###   to be used. Possible choices are "nlminb" (default), "L-BFGS-B", and 
+  ###   "bobyqa".
+  
+  ### Returns (i) intervals: a matrix of dimension length(which.features) x 2 containing the CIs
+  ###         (ii) all.vpcs: a matrix of dimension length(which.features) x num.boot containing all
+  ###               bootstrapped VPC values.
+  
   all.vpcs = matrix(NA, nrow = length(which.features), ncol=num.boot)
   vec.num.rep = as.numeric(table(Strains))
   
@@ -616,7 +622,7 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot, method="NB"
     fit = fitNBMM(CountMatrix[which.features,], Strains)
     
     for (i in 1:length(which.features)){
-      print(paste("Doing Bootstraps for feature",i))
+      print(paste("Bootstraping feature",i))
       boot.data = getNBReadMatrix(vec.num.rep, 
                                   rep(fit$paras[i,1],num.boot), 
                                   rep(fit$paras[i,2],num.boot),
@@ -639,7 +645,7 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot, method="NB"
     fit = fitCPMM(CountMatrix[which.features,], Strains, optimizer = optimizer)
     
     for (i in 1:length(which.features)){
-      print(paste("Doing Bootstraps for feature",i))
+      print(paste("Bootstraping feature",i))
       boot.data = getCPReadMatrix(vec.num.rep, 
                                   rep(fit$paras[i,1],num.boot), 
                                   rep(fit$paras[i,2],num.boot),
@@ -663,7 +669,7 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot, method="NB"
     fit = fitNBMM(CountMatrix[which.features,], Strains)
     
     for (i in 1:length(which.features)){
-      print(paste("Doing Bootstraps for feature",i))
+      print(paste("Bootstraping feature",i))
       boot.data = getNBReadMatrix(vec.num.rep, 
                                   rep(fit$paras[i,1],num.boot), 
                                   rep(fit$paras[i,2],num.boot),
