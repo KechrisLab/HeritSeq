@@ -590,10 +590,6 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 }
 
 
-
-
-
-
 #' SHORT DESCRIPTION OF GETBOOTCI
 #' 
 #' LONG DESCRIPTION OF GETBOOTCI
