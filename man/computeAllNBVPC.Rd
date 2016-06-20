@@ -18,4 +18,16 @@ feature names.
 \description{
 Calculate the negative binomial vpc for one or more features.
 }
+\examples{
+## Compute vpc for each feature under NBMM.
+vpc.nb <- computeAllNBVPC(para_nb)
+
+## Visulize the distribution of the vpcs. 
+hist(vpc.nb, breaks = 50, col = "cyan")
+
+## Plot sorted vpcs.
+plot(sort(vpc.nb), ylab = "Heritability (h2)", ylim = c(0,1), main = "Sorted NB VPC scores")
+abline(h = 0.9, lty = 2, col = "red")
+text(50, 0.92, "h2 = 0.9", col = "red")
+}
 

@@ -24,4 +24,28 @@ A list with two members. The first is a \eqn{1 \times G}{1 x G} vector indicatin
 \description{
 Compute the VPC values for a list of features under a linear mixed model (LMM).
 }
+\examples{
+## Compute vpc for each feature under LMM.
+
+## Provide normalized data with prior weights:
+result.voom <- computeAlllmerVPC(simData_voom, strains, PriorWeights = weights_voom)
+vpc.voom <- result.voom[[1]]
+
+## Provide normalized data without prior weights and include hypothesis 
+##  testing on presence of heritability:
+result.vst <- computeAlllmerVPC(simData_vst, strains, test = TRUE)
+## Extract parameters
+vpc.vst <- result.vst[[1]]
+## Extract p-values
+pval.vst <- result.vst[[2]]
+
+## Visulize the distribution of p-values.
+hist(pval.vst, breaks = 30, col = "cyan")
+
+## Compare the vpc estimates. 
+require(psych)
+bothvpc <- cbind(vpc.voom, vpc.vst)
+colnames(bothvpc) <- c("voom", "vst")
+pairs.panels(bothvpc, ellipses = FALSE, breaks = 30, main = "vpc comparison")
+}
 

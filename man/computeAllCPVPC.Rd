@@ -18,4 +18,16 @@ vpcs A \eqn{G \times 1}{G x 1} matrix consisting of variance partition coefficie
 \description{
 Calculate the compound Poisson VPC for one or more features.
 }
+\examples{
+## Compute vpc for each feature under CPMM. 
+vpc.cp <- computeAllCPVPC(para_cp) 
+
+## Visulize the distribution of the vpcs. 
+hist(vpc.cp, breaks = 50, col = "cyan")
+
+## Plot sorted vpcs.
+plot(sort(vpc.cp), ylab = "Heritability (h2)", ylim = c(0,1), main = "Sorted CP VPC scores")
+abline(h = 0.9, lty = 2, col = "red")
+text(50, 0.92, "h2 = 0.9", col = "red")
+}
 

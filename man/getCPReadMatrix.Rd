@@ -30,4 +30,39 @@ Model: \cr
 \eqn{log(\mu) = {\beta}_0 + Strain_i}{log(mu) = beta0 + Strain_i} \cr
 \eqn{Strain_i \sim N(0, sig2.strains)}{Strain_i ~ N(0, sig2.strains)}
 }
+\examples{
+## Generate a sequencing dataset with 5 features and 6 strains. 
+## Assign parameter values.
+rep.num <- c(3, 5, 2, 3, 4, 2)
+b0 <- c(-1, 1, 2, 5, 10)
+sig2s <- c(10, 0.2, 0.1, 0.03, 0.01)
+ps <- rep(1.5, 5)
+phis <- c(1.5, 1, 0.5, 0.1, 0.1)
+
+set.seed(1234)
+## Generate reads:
+cpData <- getCPReadMatrix(rep.num, b0, sig2s, ps, phis)
+## Generate strain names:
+str <- sapply(1:length(rep.num), function(x){
+  str.x <- paste0("S", x)
+  return(rep(str.x, rep.num[x]))
+})
+str <- do.call(c, str)
+
+## Visualize sequencing reads for one feature.
+require(ggplot2)
+require(reshape2)
+CountVector <- cpData[1, ]
+raw_melt <- melt(CountVector)
+raw_melt$Var <- str
+names(raw_melt) <- c('read', 'strain')
+ggplot(raw_melt) +
+  aes(x = reorder(strain, read, FUN = mean), y = read) +
+  geom_boxplot(aes(fill = strain)) + 
+  theme(legend.position="none") +
+  # theme(axis.ticks = element_blank(), axis.text.x = element_blank()) +
+  theme(text = element_text(size = 20)) +
+  labs(title = "Gene 1") + 
+  xlab("strain") 
+}
 

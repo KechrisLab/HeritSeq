@@ -23,4 +23,10 @@ consists of p-values for testing the hypothesis that \eqn{\sigma_a^2 = 0}{sigma_
 \description{
 Fit a NBMM for a list of features and output the fit parameters.
 }
+\examples{
+## Compute vpc for each feature under NBMM. This will take a while on the
+##  entire dataset. For the purpose of illustration, here we only fit on 
+##  the first 10 features.
+result.nb <- fitNBMM(simData[1:10, ], strains)
+}
 

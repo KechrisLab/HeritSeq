@@ -94,6 +94,17 @@ getNBReads <- function(vec.num.rep, beta0, sig2.strain, phi){
 #'  of the form "Ss_r", where S stands for sample, s is the strain number,
 #'  r is the replicate number within the strain. Row names are the feature
 #'  names of the form "Gene g", where g is the feature index.
+#' @examples
+#' ## Generate a sequencing dataset with 5 features and 6 strains. 
+#' ## Assign parameter values.
+#' rep.num <- c(3, 5, 2, 3, 4, 2)
+#' b0 <- c(-1, 1, 2, 5, 10)
+#' sig2s <- c(10, 0.2, 0.1, 0.03, 0.01)
+#' phis <- c(0.5, 1, 0.05, 0.01, 0.1)
+#' 
+#' set.seed(1234)
+#' ## Generate reads:
+#' nbData <- getNBReadMatrix(rep.num, b0, sig2s, phis)
 #' @export
 getNBReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, phis){
 
@@ -178,6 +189,40 @@ getCPReads <- function(vec.num.rep, beta0, sig2.strains, p, phi){
 #'   of the form "Ss_r", where S stands for sample, s is the strain number, 
 #'   r is the replicate number within the strain. Row names are the feature 
 #'   names of the form "Gene g", where g is the feature index.
+#' @examples
+#' ## Generate a sequencing dataset with 5 features and 6 strains. 
+#' ## Assign parameter values.
+#' rep.num <- c(3, 5, 2, 3, 4, 2)
+#' b0 <- c(-1, 1, 2, 5, 10)
+#' sig2s <- c(10, 0.2, 0.1, 0.03, 0.01)
+#' ps <- rep(1.5, 5)
+#' phis <- c(1.5, 1, 0.5, 0.1, 0.1)
+#' 
+#' set.seed(1234)
+#' ## Generate reads:
+#' cpData <- getCPReadMatrix(rep.num, b0, sig2s, ps, phis)
+#' ## Generate strain names:
+#' str <- sapply(1:length(rep.num), function(x){
+#'   str.x <- paste0("S", x)
+#'   return(rep(str.x, rep.num[x]))
+#' })
+#' str <- do.call(c, str)
+#' 
+#' ## Visualize sequencing reads for one feature.
+#' require(ggplot2)
+#' require(reshape2)
+#' CountVector <- cpData[1, ]
+#' raw_melt <- melt(CountVector)
+#' raw_melt$Var <- str
+#' names(raw_melt) <- c('read', 'strain')
+#' ggplot(raw_melt) +
+#'   aes(x = reorder(strain, read, FUN = mean), y = read) +
+#'   geom_boxplot(aes(fill = strain)) + 
+#'   theme(legend.position="none") +
+#'   # theme(axis.ticks = element_blank(), axis.text.x = element_blank()) +
+#'   theme(text = element_text(size = 20)) +
+#'   labs(title = "Gene 1") + 
+#'   xlab("strain") 
 #' @export
 getCPReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, ps, phis){   
 
@@ -208,6 +253,11 @@ getCPReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, ps, phis){
 #' for each feature The columns are ordered by "beta0", "sigma_a2", "phi". 
 #' Row names are feature names; the second member of the list  
 #' consists of p-values for testing the hypothesis that \eqn{\sigma_a^2 = 0}{sigma_a2 = 0}.
+#' @examples
+#' ## Compute vpc for each feature under NBMM. This will take a while on the
+#' ##  entire dataset. For the purpose of illustration, here we only fit on 
+#' ##  the first 10 features.
+#' result.nb <- fitNBMM(simData[1:10, ], strains)
 #' @export
 fitNBMM <- function(CountMatrix, Strains, test = FALSE){
 
@@ -320,6 +370,17 @@ compute1NBVPC <- function(beta0, sigma_a2, phi){
 #' @return A \eqn{G \times 1}{G x 1} matrix consisting of variance partition coefficients for
 #' \eqn{G} features based on negative binomial mixed model (NBMM). Column name is "NBMM_vpc"; row names are the 
 #' feature names.
+#' @examples
+#' ## Compute vpc for each feature under NBMM.
+#' vpc.nb <- computeAllNBVPC(para_nb)
+#' 
+#' ## Visulize the distribution of the vpcs. 
+#' hist(vpc.nb, breaks = 50, col = "cyan")
+#' 
+#' ## Plot sorted vpcs.
+#' plot(sort(vpc.nb), ylab = "Heritability (h2)", ylim = c(0,1), main = "Sorted NB VPC scores")
+#' abline(h = 0.9, lty = 2, col = "red")
+#' text(50, 0.92, "h2 = 0.9", col = "red")
 #' @export
 computeAllNBVPC <- function(para){
 
@@ -486,6 +547,17 @@ compute1CPVPC <- function(beta0, sigma_a2, p, phi){
 #' @return vpcs A \eqn{G \times 1}{G x 1} matrix consisting of variance partition coefficients for
 #'   G features based on compound Poisson mixture model (CPMM) Column name is "CPMM_vpc"; row names are the 
 #'   feature names.
+#' @examples
+#' ## Compute vpc for each feature under CPMM. 
+#' vpc.cp <- computeAllCPVPC(para_cp) 
+#' 
+#' ## Visulize the distribution of the vpcs. 
+#' hist(vpc.cp, breaks = 50, col = "cyan")
+#' 
+#' ## Plot sorted vpcs.
+#' plot(sort(vpc.cp), ylab = "Heritability (h2)", ylim = c(0,1), main = "Sorted CP VPC scores")
+#' abline(h = 0.9, lty = 2, col = "red")
+#' text(50, 0.92, "h2 = 0.9", col = "red")
 #' @export
 computeAllCPVPC <- function(para){
 
@@ -559,6 +631,29 @@ compute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL,
 #' @return A list with two members. The first is a \eqn{1 \times G}{1 x G} vector indicating the significance or random effects
 #'  for each feature under linear mixed model (LMM); the second member of the list consists of the 
 #'  p-values from testing the hypothesis that there is no random effect.
+#' @examples
+#' ## Compute vpc for each feature under LMM.
+#' 
+#' ## Provide normalized data with prior weights:
+#' result.voom <- computeAlllmerVPC(simData_voom, strains, PriorWeights = weights_voom)
+#' vpc.voom <- result.voom[[1]]
+#' 
+#' ## Provide normalized data without prior weights and include hypothesis 
+#' ##  testing on presence of heritability:
+#' result.vst <- computeAlllmerVPC(simData_vst, strains, test = TRUE)
+#' ## Extract parameters
+#' vpc.vst <- result.vst[[1]]
+#' ## Extract p-values
+#' pval.vst <- result.vst[[2]]
+#' 
+#' ## Visulize the distribution of p-values.
+#' hist(pval.vst, breaks = 30, col = "cyan")
+#' 
+#' ## Compare the vpc estimates. 
+#' require(psych)
+#' bothvpc <- cbind(vpc.voom, vpc.vst)
+#' colnames(bothvpc) <- c("voom", "vst")
+#' pairs.panels(bothvpc, ellipses = FALSE, breaks = 30, main = "vpc comparison")
 #' @export
 computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL, 
                               test = FALSE){

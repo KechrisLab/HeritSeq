@@ -29,4 +29,16 @@ Each row corresponds to one feature that follows: \cr
 \eqn{log(E(Y_{ij})) = {\beta}_0 + Strain_i}{log(E(Yij)) = beta0 + Strain_i} \cr
 \eqn{Strain_i \sim N(0, sig2.strain)}{Strain_i ~ N(0, sig2.strain)}
 }
+\examples{
+## Generate a sequencing dataset with 5 features and 6 strains. 
+## Assign parameter values.
+rep.num <- c(3, 5, 2, 3, 4, 2)
+b0 <- c(-1, 1, 2, 5, 10)
+sig2s <- c(10, 0.2, 0.1, 0.03, 0.01)
+phis <- c(0.5, 1, 0.05, 0.01, 0.1)
+
+set.seed(1234)
+## Generate reads:
+nbData <- getNBReadMatrix(rep.num, b0, sig2s, phis)
+}
 
