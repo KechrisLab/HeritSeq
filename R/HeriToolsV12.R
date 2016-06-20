@@ -597,23 +597,24 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 
 
 
-
+#' SHORT DESCRIPTION OF GETBOOTCI
+#' 
+#' LONG DESCRIPTION OF GETBOOTCI
+#' 
+#' @param CountMatrix The data matrix; rows are features, columns are samples
+#' @param Strains The vector of strains corresponding to each sample, length = ncol(CountMatrix)
+#' @param which.features The vector of select feature numbers for which CI is desired
+#' @param num.boot Number of bootstraps
+#' @param method Which method should be used, "CP", "NB", or "VST". "VST" method bootstraps data from "NB"
+#' @param alpha The CI will be \eqn{100*(1-\alpha)}{100*(1-alpha)} percent CI
+#' @param optimizer A character string that determines which optimization routine is
+#'  to be used. Possible choices are "nlminb" (default), "L-BFGS-B", and "bobyqa".
+#' @return (i) intervals: a matrix of dimension length(which.features) x 2 containing the CIs
+#'  (ii) all.vpcs: a matrix of dimension length(which.features) x num.boot containing all
+#'  bootstrapped VPC values.
+#' @export
 GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
                      method="NB", alpha=0.05, optimizer = "nlminb"){
-  ### CountMatrix: The data matrix, rows are features, columns are samples
-  ### Strains: The vector of strains corresponding to each sample, length = ncol(CountMatrix)
-  ### which.features: The vector of select feature numbers for which CI is desired
-  ### alpha: The CI will be 100*(1-alpha)% CI
-  ### num.boot: Number of bootstraps
-  ### method: Which method should be used, "CP", "NB", or "VST". "VST" method bootstraps data from "NB".
-  ### optimizer: A character string that determines which optimization routine is
-  ###   to be used. Possible choices are "nlminb" (default), "L-BFGS-B", and 
-  ###   "bobyqa".
-  
-  ### Returns (i) intervals: a matrix of dimension length(which.features) x 2 containing the CIs
-  ###         (ii) all.vpcs: a matrix of dimension length(which.features) x num.boot containing all
-  ###               bootstrapped VPC values.
-  
   all.vpcs = matrix(NA, nrow = length(which.features), ncol=num.boot)
   vec.num.rep = as.numeric(table(Strains))
   
