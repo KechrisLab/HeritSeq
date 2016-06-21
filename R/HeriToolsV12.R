@@ -207,24 +207,8 @@ getCPReads <- function(vec.num.rep, beta0, sig2.strains, p, phi){
 #'   return(rep(str.x, rep.num[x]))
 #' })
 #' str <- do.call(c, str)
-#' 
-#' ## Visualize sequencing reads for one feature.
-#' require(ggplot2)
-#' require(reshape2)
-#' CountVector <- cpData[1, ]
-#' raw_melt <- melt(CountVector)
-#' raw_melt$Var <- str
-#' names(raw_melt) <- c('read', 'strain')
-#' ggplot(raw_melt) +
-#'   aes(x = reorder(strain, read, FUN = mean), y = read) +
-#'   geom_boxplot(aes(fill = strain)) + 
-#'   theme(legend.position="none") +
-#'   # theme(axis.ticks = element_blank(), axis.text.x = element_blank()) +
-#'   theme(text = element_text(size = 20)) +
-#'   labs(title = "Gene 1") + 
-#'   xlab("strain") 
 #' @export
-getCPReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, ps, phis){   
+getCPReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, ps, phis){
 
   num.probes <- length(beta0s)
   CountMatrix <- lapply(1:num.probes, function(x){
@@ -260,6 +244,10 @@ getCPReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, ps, phis){
 #' result.nb <- fitNBMM(simData[1:10, ], strains)
 #' @export
 fitNBMM <- function(CountMatrix, Strains, test = FALSE){
+    if(is.null(dim(CountMatrix))){
+        warning('Fitting a single feature.')
+        CountMatrix <- matrix(CountMatrix, nrow = 1)
+    }
 
   GeneIDs <- rownames(CountMatrix)
   paras <- t(pbsapply(1:nrow(CountMatrix), function(x){
@@ -443,6 +431,11 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   #   consists of p-values for testing the hypothesis that sigma_a2 = 0.
   
   suppressMessages(suppressWarnings(requireNamespace("cplm")))
+  
+  if(is.null(dim(CountMatrix))){
+      warning('Fitting a single feature.')
+      CountMatrix <- matrix(CountMatrix, nrow = 1)
+  }
   
   paras <- t(pbsapply(1:nrow(CountMatrix), function(x){
     CountVector <- CountMatrix[x, ]
@@ -648,12 +641,6 @@ compute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL,
 #' 
 #' ## Visulize the distribution of p-values.
 #' hist(pval.vst, breaks = 30, col = "cyan")
-#' 
-#' ## Compare the vpc estimates. 
-#' require(psych)
-#' bothvpc <- cbind(vpc.voom, vpc.vst)
-#' colnames(bothvpc) <- c("voom", "vst")
-#' pairs.panels(bothvpc, ellipses = FALSE, breaks = 30, main = "vpc comparison")
 #' @export
 computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL, 
                               test = FALSE){
