@@ -16,7 +16,7 @@
 #                         getOption("repos")),
 #                 type="source")
 #source("https://bioconductor.org/biocLite.R")
-#biocLite("DESeq")
+#biocLite("DESeq2")
 
 
 requireNamespace("lme4")
@@ -24,7 +24,7 @@ requireNamespace("glmmADMB")
 requireNamespace("tweedie")
 requireNamespace("cplm")
 requireNamespace("pbapply")
-requireNamespace("DESeq")
+requireNamespace("DESeq2")
 
 if(getRversion() >= "3.1.0") utils::globalVariables(c("cplm.data", "cplm"))
 
@@ -654,7 +654,7 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
       return(vpc.x)
     }
   })
-  VPC = as.matrix(VPC)  
+  VPC <- as.matrix(VPC)
   if(test){
     VPC = t(VPC)
     pvals <- matrix(VPC[,2], ncol = 1)
@@ -758,17 +758,17 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
                                   rep(fit$paras[i,2],num.boot),
                                   rep(fit$paras[i,3],num.boot))
       
-      cds=newCountDataSet(round(boot.data), Strains) 
-      cds=estimateSizeFactors(cds)
+      cds <- DESeqDataSetFromMatrix(round(boot.data), data.frame(strain = Strains), formula(~strain))
+      cds <- estimateSizeFactors(cds)
       
       if (sum(is.na(sizeFactors(cds)))>0){   # In a few simulations, there are NA's due to too many low counts
-        cds=newCountDataSet(round(1+cplm.data), Strains) # 1 added to avoid too many low counts in those cases
+        cds <- DESeqDataSetFromMatrix(round(1+boot.data), data.frame(strain = Strains), formula(~strain)) # 1 added to avoid too many low counts in those cases
         # This adds a small variation to the data
-        cds=estimateSizeFactors(cds)
+        cds <- estimateSizeFactors(cds)
       }
-      #sizeFactors(cds)
-      cds=estimateDispersions(cds, method="pooled",fitType="local")
-      vsd=getVarianceStabilizedData(cds)
+      cds <- estimateDispersions(cds, fitType = "local")
+      vsd <- getVarianceStablizedData(cds)
+
       all.vpcs[i,] = computeAlllmerVPC(vsd, Strains)$vpcs
     }
     
