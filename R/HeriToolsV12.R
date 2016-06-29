@@ -26,8 +26,9 @@ requireNamespace("cplm")
 requireNamespace("pbapply")
 requireNamespace("DESeq2")
 requireNamespace("MASS")
+requireNamespace("SummarizedExperiment")
 
-if(getRversion() >= "3.1.0") utils::globalVariables("cplm")
+# if(getRversion() >= "3.1.0") utils::globalVariables("cplm")
 
 ###############################################################################
 ### Generate negative binomial distributed data matrix 
@@ -800,7 +801,9 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
         cds <- DESeq2::estimateSizeFactors(cds)
       }
       cds <- DESeq2::estimateDispersions(cds, fitType = "local")
-      vsd <- DESeq2::getVarianceStablizedData(cds)
+      vsd <- DESeq2::varianceStabilizingTransformation(cds, fitType = "local")
+      vsd <- SummarizedExperiment::assay(vsd)
+      # vsd <- DESeq2::getVarianceStablizedData(cds)
 
       all.vpcs[i,] = computeAlllmerVPC(vsd, Strains)$vpcs
     }

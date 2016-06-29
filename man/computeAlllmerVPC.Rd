@@ -41,11 +41,4 @@ pval.vst <- result.vst[[2]]
 
 ## Visulize the distribution of p-values.
 hist(pval.vst, breaks = 30, col = "cyan")
-
-## Compare the vpc estimates. 
-require(psych)
-bothvpc <- cbind(vpc.voom, vpc.vst)
-colnames(bothvpc) <- c("voom", "vst")
-pairs.panels(bothvpc, ellipses = FALSE, breaks = 30, main = "vpc comparison")
 }
-

@@ -25,5 +25,6 @@ Imports:
     lme4,
     pbapply,
     tweedie,
-    MASS
+    MASS,
+    SummarizedExperiment
 RoxygenNote: 5.0.1

@@ -48,21 +48,4 @@ str <- sapply(1:length(rep.num), function(x){
   return(rep(str.x, rep.num[x]))
 })
 str <- do.call(c, str)
-
-## Visualize sequencing reads for one feature.
-require(ggplot2)
-require(reshape2)
-CountVector <- cpData[1, ]
-raw_melt <- melt(CountVector)
-raw_melt$Var <- str
-names(raw_melt) <- c('read', 'strain')
-ggplot(raw_melt) +
-  aes(x = reorder(strain, read, FUN = mean), y = read) +
-  geom_boxplot(aes(fill = strain)) + 
-  theme(legend.position="none") +
-  # theme(axis.ticks = element_blank(), axis.text.x = element_blank()) +
-  theme(text = element_text(size = 20)) +
-  labs(title = "Gene 1") + 
-  xlab("strain") 
 }
-
