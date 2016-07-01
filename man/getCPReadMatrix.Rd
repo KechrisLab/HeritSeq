@@ -49,3 +49,4 @@ str <- sapply(1:length(rep.num), function(x){
 })
 str <- do.call(c, str)
 }
+

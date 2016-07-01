@@ -21,8 +21,25 @@ A list with two members. The first is a \eqn{G \times 4}{G x 4} matrix
 indicating the fitted parameters for each feature The columns are ordered by 
 "beta0", "p", sigma_a2", "phi". Row names are feature names; the second member of the list  
 consists of p-values for testing the hypothesis that \eqn{\sigma_a^2 = 0}{sigma_a2 = 0}.
+## Fit CPMM on the entire dataset takes about 30 minutes. For the purpose 
+##  of illustration, here we only fit on the first 10 features.
 }
 \description{
-Fit a CPMM for a list of features.
+Fit a CPMM for one or more features.
+}
+\examples{
+## Fit CPMM for each feature using the default optimizer. 
+result.cp <- fitCPMM(simData[1:10, ], strains)
+## Extract parameters
+para.cp <- result.cp[[1]]
+## Extract p-values
+pval.cp <- result.cp[[2]]
+
+## Fit CPMM for each feature using an alternative optimizer.
+result.cp2 <- fitCPMM(simData[1:10, ], strains, optimizer = "L-BFGS-B")
+
+## Fit CPMM for each feature using with hypothesis testing on presence of
+##  heritability.
+result.cp3 <- fitCPMM(simData[1:10, ], strains, test = TRUE)
 }
 

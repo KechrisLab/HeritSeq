@@ -28,7 +28,6 @@ requireNamespace("DESeq2")
 requireNamespace("MASS")
 requireNamespace("SummarizedExperiment")
 
-# if(getRversion() >= "3.1.0") utils::globalVariables("cplm")
 
 ###############################################################################
 ### Generate negative binomial distributed data matrix 
@@ -415,7 +414,7 @@ computeAllNBVPC <- function(para){
 #' consists of p-values for testing the hypothesis that \eqn{\sigma_a^2 = 0}{sigma_a2 = 0}.
 #' ## Fit CPMM on the entire dataset takes about 30 minutes. For the purpose 
 #' ##  of illustration, here we only fit on the first 10 features.
-#' 
+#' @examples
 #' ## Fit CPMM for each feature using the default optimizer. 
 #' result.cp <- fitCPMM(simData[1:10, ], strains)
 #' ## Extract parameters

@@ -2,7 +2,7 @@
 % Please edit documentation in R/HeriToolsV12.R
 \name{fitNBMM}
 \alias{fitNBMM}
-\title{Fit a NBMM for a list of features}
+\title{Fit a NBMM for one or more features}
 \usage{
 fitNBMM(CountMatrix, Strains, test = FALSE)
 }
@@ -21,7 +21,7 @@ Row names are feature names; the second member of the list
 consists of p-values for testing the hypothesis that \eqn{\sigma_a^2 = 0}{sigma_a2 = 0}.
 }
 \description{
-Fit a NBMM for a list of features and output the fit parameters.
+Fit a NBMM for one or more features and output the fit parameters.
 }
 \examples{
 ## Compute vpc for each feature under NBMM. This will take a while on the

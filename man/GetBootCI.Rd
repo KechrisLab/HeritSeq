@@ -31,4 +31,18 @@ to be used. Possible choices are "nlminb" (default), "L-BFGS-B", and "bobyqa".}
 \description{
 LONG DESCRIPTION OF GETBOOTCI
 }
+\examples{
+## Compute CI based on 100 bootstrap samples for the first feature 
+##  under NBMM. It takes a few minutes.
+NBboot <- GetBootCI(simData, strains, 1, 100)
+## Extract CI
+NBboot.ci <- NBboot[[1]]
+## Extract vpcs
+NBboot.vpc <- NBboot[[2]]
+
+## Compute CI based on 100 bootstrap samples for the first two features 
+##  under vst. 
+VSTboot <- GetBootCI(simData, strains, 1:2, 100, method = "VST")
+
+}
 

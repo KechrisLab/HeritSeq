@@ -42,3 +42,4 @@ pval.vst <- result.vst[[2]]
 ## Visulize the distribution of p-values.
 hist(pval.vst, breaks = 30, col = "cyan")
 }
+
