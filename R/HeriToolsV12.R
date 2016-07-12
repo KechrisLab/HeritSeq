@@ -11,22 +11,22 @@
 #install.packages("cplm", repos="http://cran.r-project.org")
 #install.packages("pbapply", repos="http://cran.r-project.org")
 #install.packages("R2admb")
-#install.packages("glmmADMB", 
+# install.packages("glmmADMB", 
 #                 repos=c("http://glmmadmb.r-forge.r-project.org/repos",
 #                         getOption("repos")),
 #                 type="source")
-#source("https://bioconductor.org/biocLite.R")
-#biocLite("DESeq2")
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("DESeq2")
 
 
-requireNamespace("lme4")
-requireNamespace("glmmADMB")
-requireNamespace("tweedie")
-requireNamespace("cplm")
-requireNamespace("pbapply")
-requireNamespace("DESeq2")
-requireNamespace("MASS")
-requireNamespace("SummarizedExperiment")
+requireNamespace("lme4", quietly = TRUE)
+requireNamespace("glmmADMB", quietly = TRUE)
+requireNamespace("tweedie", quietly = TRUE)
+requireNamespace("cplm", depends = TRUE, quietly = TRUE)
+requireNamespace("pbapply", quietly = TRUE)
+requireNamespace("DESeq2", quietly = TRUE)
+requireNamespace("MASS", quietly = TRUE)
+requireNamespace("SummarizedExperiment", quietly = TRUE)
 
 
 ###############################################################################
@@ -241,8 +241,8 @@ getCPReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, ps, phis){
 #' @examples
 #' ## Compute vpc for each feature under NBMM. This will take a while on the
 #' ##  entire dataset. For the purpose of illustration, here we only fit on 
-#' ##  the first 10 features.
-#' result.nb <- fitNBMM(simData[1:10, ], strains)
+#' ##  the first 2 features.
+#' result.nb <- fitNBMM(simData[1:2, ], strains)
 #' @export
 fitNBMM <- function(CountMatrix, Strains, test = FALSE){
   if(is.null(dim(CountMatrix))){
@@ -415,19 +415,21 @@ computeAllNBVPC <- function(para){
 #' ## Fit CPMM on the entire dataset takes about 30 minutes. For the purpose 
 #' ##  of illustration, here we only fit on the first 10 features.
 #' @examples
-#' ## Fit CPMM for each feature using the default optimizer. 
-#' result.cp <- fitCPMM(simData[1:10, ], strains)
+#' \dontrun{
+#' ## Fit CPMM for the first two features using the default optimizer. 
+#' result.cp <- fitCPMM(simData[1, ], strains)
 #' ## Extract parameters
 #' para.cp <- result.cp[[1]]
 #' ## Extract p-values
 #' pval.cp <- result.cp[[2]]
 #' 
-#' ## Fit CPMM for each feature using an alternative optimizer.
-#' result.cp2 <- fitCPMM(simData[1:10, ], strains, optimizer = "L-BFGS-B")
+#' ## Fit CPMM for the first two features using an alternative optimizer.
+#' result.cp2 <- fitCPMM(simData[1:2, ], strains, optimizer = "L-BFGS-B")
 #' 
-#' ## Fit CPMM for each feature using with hypothesis testing on presence of
-#' ##  heritability.
-#' result.cp3 <- fitCPMM(simData[1:10, ], strains, test = TRUE)
+#' ## Fit CPMM for the first two features with hypothesis testing 
+#' ##  on presence of heritability.
+#' result.cp3 <- fitCPMM(simData[1:2, ], strains, test = TRUE)
+#' }
 #' @export
 fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   # Fit a compound Poisson mixed effect model for a list of probes/genes and 
@@ -450,6 +452,7 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   
   # suppressMessages(suppressWarnings(requireNamespace("cplm")))
   suppressPackageStartupMessages(requireNamespace("cplm"))
+  attachNamespace("package:cplm")
   
   if(is.null(dim(CountMatrix))){
       print('Fitting a single feature.')
@@ -483,9 +486,10 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     
     ### Fitting the reduced model for testing significance of the random effect ###
     if (test){
-        #     detach("package:cplm", unload=TRUE)
-      unloadNamespace("cplm")
-      suppressMessages(suppressWarnings(requireNamespace("cplm")))
+      detach("package:cplm", unload=TRUE)
+      # unloadNamespace("cplm")
+      suppressMessages(suppressWarnings(requireNamespace("cplm", quietly = TRUE)))
+      attachNamespace("package:cplm")
       fit.red <- tryCatch({
         fit2 <- cplm::cpglm(expr ~ 1, data = dat_sub, optimizer = optimizer)
       }, error=function(err){
@@ -507,9 +511,10 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
       para <- c(para, pval)
     }
     
-    #    detach("package:cplm", unload=TRUE)
-    unloadNamespace("cplm")
-    suppressMessages(suppressWarnings(requireNamespace("cplm")))
+    detach("package:cplm", unload=TRUE)
+    # unloadNamespace("cplm")
+    suppressMessages(suppressWarnings(requireNamespace("cplm", quietly = TRUE)))
+    attachNamespace("package:cplm")
     return(para)
   }))
   
@@ -717,15 +722,17 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' @examples
 #' ## Compute CI based on 100 bootstrap samples for the first feature 
 #' ##  under NBMM. It takes a few minutes.
+#' \dontrun{
 #' NBboot <- GetBootCI(simData, strains, 1, 100)
 #' ## Extract CI
 #' NBboot.ci <- NBboot[[1]]
 #' ## Extract vpcs
 #' NBboot.vpc <- NBboot[[2]]
+#' }
 #' 
-#' ## Compute CI based on 100 bootstrap samples for the first two features 
+#' ## Compute CI based on 100 bootstrap samples for the first feature
 #' ##  under vst. 
-#' VSTboot <- GetBootCI(simData, strains, 1:2, 100, method = "VST")
+#' VSTboot <- GetBootCI(simData, strains, 1, 100, method = "VST")
 #' 
 #' @export
 GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
