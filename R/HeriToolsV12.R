@@ -22,7 +22,7 @@
 requireNamespace("lme4", quietly = TRUE)
 requireNamespace("glmmADMB", quietly = TRUE)
 requireNamespace("tweedie", quietly = TRUE)
-requireNamespace("cplm", depends = TRUE, quietly = TRUE)
+requireNamespace("cplm", quietly = TRUE)
 requireNamespace("pbapply", quietly = TRUE)
 requireNamespace("DESeq2", quietly = TRUE)
 requireNamespace("MASS", quietly = TRUE)
@@ -415,7 +415,7 @@ computeAllNBVPC <- function(para){
 #' ## Fit CPMM on the entire dataset takes about 30 minutes. For the purpose 
 #' ##  of illustration, here we only fit on the first 10 features.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' ## Fit CPMM for the first two features using the default optimizer. 
 #' result.cp <- fitCPMM(simData[1, ], strains)
 #' ## Extract parameters
@@ -451,7 +451,8 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   #   consists of p-values for testing the hypothesis that sigma_a2 = 0.
   
   # suppressMessages(suppressWarnings(requireNamespace("cplm")))
-  suppressPackageStartupMessages(requireNamespace("cplm"))
+  suppressPackageStartupMessages(requireNamespace("cplm", depends = TRUE, 
+                                                  quietly = TRUE))
   attachNamespace("package:cplm")
   
   if(is.null(dim(CountMatrix))){
@@ -488,7 +489,9 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     if (test){
       detach("package:cplm", unload=TRUE)
       # unloadNamespace("cplm")
-      suppressMessages(suppressWarnings(requireNamespace("cplm", quietly = TRUE)))
+      suppressMessages(suppressWarnings(requireNamespace("cplm", 
+                                                         depends = TRUE,
+                                                         quietly = TRUE)))
       attachNamespace("package:cplm")
       fit.red <- tryCatch({
         fit2 <- cplm::cpglm(expr ~ 1, data = dat_sub, optimizer = optimizer)
@@ -513,7 +516,9 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     
     detach("package:cplm", unload=TRUE)
     # unloadNamespace("cplm")
-    suppressMessages(suppressWarnings(requireNamespace("cplm", quietly = TRUE)))
+    suppressMessages(suppressWarnings(requireNamespace("cplm", 
+                                                       depends = TRUE,
+                                                       quietly = TRUE)))
     attachNamespace("package:cplm")
     return(para)
   }))
@@ -722,7 +727,7 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' @examples
 #' ## Compute CI based on 100 bootstrap samples for the first feature 
 #' ##  under NBMM. It takes a few minutes.
-#' \dontrun{
+#' \donttest{
 #' NBboot <- GetBootCI(simData, strains, 1, 100)
 #' ## Extract CI
 #' NBboot.ci <- NBboot[[1]]

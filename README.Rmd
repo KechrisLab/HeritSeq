@@ -1,0 +1,202 @@
+---
+title: "heritseq README"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+params:
+  filenames: "heritseq_example.RData"
+---
+
+## Overview
+The **heritseq** package allows heritability score analyses under linear mixed models (LMM) or generalized linear mixed models (GLMM), including:
+
+- Computing heritability score under LMM for normalized/transformed dataset, and under negative binomial mixed models (NBMM) or compound Poisson mixed models (CPMM) for data without transformations.  
+- Testing presence of heritability under LMM, NBMM or CPMM.
+- Confidence intervals of estimated heritability score. 
+- Generating synthetic high-throughput sequencing datasets using NBMM or CPMM. 
+
+See [^1] for model details and performance comparisons. 
+
+[^1]: *Model based heritability scores for high-throughput sequencing data*, Rudra et al. 
+
+## Sample dataset
+The **heritseq** package includes a sample high-throughput sequencing dataset 
+called *simData*. It is an 881 by 175 matrix, containing 881 features and 175 samples. The total number of strains is 59, and the strain labels are recorded 
+by the variable *strains*. 
+
+## Installation
+The package requires a recent **R** version (>=3.2.3).
+```{r, eval = FALSE}
+install.packages("heritseq", repos = "http://cran.rstudio.com")
+library("heritseq")
+```
+```{r, echo = FALSE}
+setwd("~/Documents/heritseq/")
+load("data/heritseq_example.RData")
+source("R/HeriToolsV12.R")
+```
+
+## Estimate heritability scores
+We will use *simData* to illustrate the procedure of heritability estimation 
+under different models. 
+
+Before fitting any model, make sure that the dataset has been adjusted for 
+library sizes and batch bias. The *simData* is post such adjustment, we 
+therefore omit the process. 
+
+### NBMM
+Under NBMM, an observed number of reads aligned to feature/gene $g$, $Y_{gsr}$, follows a negative binomial distribution with mean $\mu_{gs}$ and variance $\mu_{gs}+\phi_{g} \mu_{gs}^2$, where $\phi_{g}$ is the dispersion parameter, shared across strains. The generalized linear model uses a $\log$-link: 
+$\log(\mu_{gs}) = \alpha_{g}+ b_{gs}, \;\;b_{gs}\sim N(0, \sigma^{2}_{g}).$
+
+The corresponding heritability score, aka Variance Partition Coefficient (VPC),
+is 
+$VPC_g^{NBMM} = \frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{\sigma^2_{g}} + e^{-\alpha_g-\sigma^2_{g}/2} }.$
+
+Compute VPC for all features using NBMM:
+```{r, eval = FALSE}
+result.nb <- fitNBMM(CountMatrix = simData, Strains = strains)
+vpc.nb <- computeAllNBVPC(para = result.nb[[1]])
+```
+
+### CPMM 
+For a CP random variable $Y_{gsr}$ with mean $\mu_{gs}$, its variance can be expressed as $\phi_{g}\mu_{gs}^{p_{g}}$, for some $1<p_{g}<2$. Under the CPMM, with a $\log$-link, the regression on the mean has the same form as the NBMM:
+$\log(\mu_{gs}) = \alpha_{g}+ b_{gs}, \;\;b_{gs}\sim N(0, \sigma^{2}_{g}).$ 
+
+The corresponding VPC is $VPC_g^{CPMM} = \frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 +  \phi_{g} e^{(p_{g}-2)\alpha_{g}+(p_{g}^2/2-1)\sigma^2_{g}}}.$
+
+Compute VPC for all features using NBMM:
+```{r, eval = FALSE}
+result.cp <- fitCPMM(CountMatrix = simData, Strains = strains)
+vpc.cp <- computeAllCPVPC(para = result.cp[[1]])
+```
+
+### VST 
+In order to use a linear mixed model (LMM), the sequence reads need to be first 
+transformed to Gaussian-like data. The variance stablizing transformation (VST) 
+was introduced in the package **DESeq2**. It is based on negative binomial assumption of the original data. 
+
+Transform *simData* using VST and fit features using LMM:
+```{r, eval = FALSE}
+attachNamespace("DESeq2")
+attachNamespace("SummarizedExperiment")
+
+cds <- DESeqDataSetFromMatrix(countData = round(simData), 
+  colData = data.frame(strain = strains),
+  design = formula(~strain))
+cds <- estimateSizeFactors(object = cds)
+cds <- estimateDispersions(object = cds, fitType = "local")
+vsd <- varianceStabilizingTransformation(cds, fitType = "local")
+simData.vst <- assay(x = vsd)
+
+vpc.vst <- computeAlllmerVPC(CountMatrix = simData.vst, Strains = strains)[[1]]
+```
+
+### Voom
+**limma** voom is another popular method to transform counts to Gaussian-like 
+data. It is a less preferrable method for computing VPC comparing to the ones above. 
+
+Transform *simData* using Voom and fit features using LMM:
+```{r, eval = FALSE}
+library(limma)
+voomed.librarySize <- voom(counts = simData, 
+  normlize.method = "scale",
+  lib.size = sizeFactors(cds))
+simData.voom <- voomed.librarySize$E
+weights.voom <- voomed.librarySize$weights
+
+vpc.voom <- computeAlllmerVPC(CountMatrix = simData.voom, 
+  Strains = strains,
+  PriorWeights = weights.voom)[[1]]
+```
+
+### Compare results from various methods
+In most cases, it is not clear which method is more appropriate for the given dataset. We suggest to fit multiple models and compare the estimation results. 
+```{r, eval = FALSE}
+library(psych)
+h2 <- cbind(vpc.nb, vpc.cp, vpc.vst, vpc.voom)
+colnames(h2) <- c("NB", "CP", "VST", "Voom")
+pairs.panels(x = h2, ellipses = FALSE, main = "Compare VPC")
+```
+```{r, echo = FALSE, fig.height = 6, fig.width = 6}
+library(psych)
+load("~/Documents/heritseq/heritexample_result.Rdata")
+pairs.panels(x = h2, ellipses = FALSE, main = "Compare VPC")
+```
+
+Along the diagonal are the histograms and kernel density plot of estimated VPC values. The panels below show pairwise comparison of the methods with locally weighted scatterplot smoothing (loess regression) in red. Above the diagonal are the correlation coefficient values. 
+
+The first three methods: NB, CP, and Voom present relatively consistent results. The features with top VPC scores are the same. 
+
+
+## Hypothesis testing
+Each of the four methods above also allows hypothesis testing presence of heritability. Set *Test = TRUE* in the functions *fitNBMM( )*, *fitCPMM( )*, and *computeAlllmerVPC( )* for NBMM, CPMM, and LMM respectively. 
+
+## Confidence intervals
+The confidence intervals (CIs) can be generated using parametric bootstrap. When 
+choosing the VST method, the bootstraped data are from negative binomal models. 
+Due to its less superior performance, the Voom approach is excluded for the *GetBootCI( )* function. 
+
+Compute CI based on 100 boostrap samples for the first feature:
+```{r, eval = FALSE}
+boot.nb <- GetBootCI(CountMatrix = simData, 
+  Strains = strains, 
+  which.features = 1, 
+  num.boot = 100)
+ci.nb <- boot.nb[[1]]
+bootvpc.nb <- boot.nb[[2]]
+
+boot.vst <- GetBootCI(CountMatrix = simData, 
+  Strains = strains, 
+  which.features = 1, 
+  num.boot = 100, 
+  method = "VST")
+```
+
+## Generate synthetic datasets
+Synthetic sequencing data with biological replicates can be generated using 
+functions *getNBReadMatrix( )* or *getCPReadMatrix( )*.
+```{r, eval = FALSE}
+rep.num <- c(3, 5, 2, 3, 4, 2)
+b0 <- c(-1, 1, 2, 5, 10)
+sig2s <- c(10, 0.2, 0.1, 0.03, 0.01)
+phis1 <- c(0.5, 1, 0.05, 0.01, 0.1)
+
+set.seed(1234)
+nbData <- getNBReadMatrix(vec.num.rep = rep.num, 
+  beta0s = b0, 
+  sig2.strains = sig2s, 
+  phis = phis1)
+
+ps <- rep(1.5, 5)
+phis2 <- c(1.5, 1, 0.5, 0.1, 0.1)
+
+set.seed(1234)
+cpData <- getCPReadMatrix(vec.num.rep = rep.num, 
+  beta0s = b0, 
+  sig2.strains = sig2s, 
+  ps = ps, 
+  phis = phis2)
+```
+
+## Versioning
+Date: 2016-07-26
+
+**Version: 1.0.0**
+
+## Authors
+
+- Pratyaydipta Rudra pratyaydipta.rudra@ucdenver.edu
+- W. Jenny Shi wjennyshi@gmail.com
+- Brian Vestal brian.vestal@ucdenver.edu
+- Pamela Russell pamela.russell@ucdenver.edu
+
+## License
+**GPL-2**
+
+
+
