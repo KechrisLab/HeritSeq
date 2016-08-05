@@ -1,12 +1,12 @@
 Package: heritseq
 Title: Heritability of Gene Expression for Next-Generation Sequencing
 Version: 1.0.0
-Date: 2016-06-06
-Author: Pratyaydipta Rudra [aut, cre],
-    W. Jenny Shi [aut, cre],
-    Brian Vestal [aut, cre],
-    Pamela Russell [aut]
-Maintainer: Jane Doe <Jane.Doe@ucdenver.edu>
+Date: 2016-08-05
+Author: W. Jenny Shi [aut, cre],
+    Pamela Russell [aut],
+    Pratyaydipta Rudra [aut, cre],
+    Brian Vestal [aut, cre]
+Maintainer: W. Jenny Shi <wjennyshi@gmail.com>
 Description: This package provides a statistical framework to analyze 
     heritability of gene expression based on next-generation sequencing 
     data and simulating sequencing reads. Variance partition coefficients 

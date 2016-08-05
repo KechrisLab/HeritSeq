@@ -709,9 +709,9 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 
 
 
-#' SHORT DESCRIPTION OF GETBOOTCI
+#' Compute confidence intervals for one or more features.
 #' 
-#' LONG DESCRIPTION OF GETBOOTCI
+#' Compute confidence intervals based on parametric bootstrap for one or more features.
 #' 
 #' @param CountMatrix The data matrix; rows are features, columns are samples
 #' @param Strains The vector of strains corresponding to each sample, length = ncol(CountMatrix)
