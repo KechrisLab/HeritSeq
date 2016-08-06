@@ -18,8 +18,6 @@ importFrom(cplm, cpglmm)
 importFrom(cplm, cpglm)
 importFrom(cplm, VarCorr)
 importFrom(lme4, lmer)
-
-# Suggested by R CMD Check
 importFrom("stats", "AIC", "formula", "lm", "logLik", "pchisq",
-             "quantile", "rnorm")
+                        "quantile", "rnorm")
 importFrom("utils", "fix")

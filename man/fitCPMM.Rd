@@ -28,18 +28,20 @@ consists of p-values for testing the hypothesis that \eqn{\sigma_a^2 = 0}{sigma_
 Fit a CPMM for one or more features.
 }
 \examples{
-## Fit CPMM for each feature using the default optimizer. 
-result.cp <- fitCPMM(simData[1:10, ], strains)
+\donttest{
+## Fit CPMM for the first two features using the default optimizer. 
+result.cp <- fitCPMM(simData[1, ], strains)
 ## Extract parameters
 para.cp <- result.cp[[1]]
 ## Extract p-values
 pval.cp <- result.cp[[2]]
 
-## Fit CPMM for each feature using an alternative optimizer.
-result.cp2 <- fitCPMM(simData[1:10, ], strains, optimizer = "L-BFGS-B")
+## Fit CPMM for the first two features using an alternative optimizer.
+result.cp2 <- fitCPMM(simData[1:2, ], strains, optimizer = "L-BFGS-B")
 
-## Fit CPMM for each feature using with hypothesis testing on presence of
-##  heritability.
-result.cp3 <- fitCPMM(simData[1:10, ], strains, test = TRUE)
+## Fit CPMM for the first two features with hypothesis testing 
+##  on presence of heritability.
+result.cp3 <- fitCPMM(simData[1:2, ], strains, test = TRUE)
+}
 }
 

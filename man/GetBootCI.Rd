@@ -2,7 +2,7 @@
 % Please edit documentation in R/HeriToolsV12.R
 \name{GetBootCI}
 \alias{GetBootCI}
-\title{SHORT DESCRIPTION OF GETBOOTCI}
+\title{Compute confidence intervals for one or more features.}
 \usage{
 GetBootCI(CountMatrix, Strains, which.features, num.boot, method = "NB",
   alpha = 0.05, optimizer = "nlminb")
@@ -29,20 +29,22 @@ to be used. Possible choices are "nlminb" (default), "L-BFGS-B", and "bobyqa".}
  bootstrapped VPC values.
 }
 \description{
-LONG DESCRIPTION OF GETBOOTCI
+Compute confidence intervals based on parametric bootstrap for one or more features.
 }
 \examples{
 ## Compute CI based on 100 bootstrap samples for the first feature 
 ##  under NBMM. It takes a few minutes.
+\donttest{
 NBboot <- GetBootCI(simData, strains, 1, 100)
 ## Extract CI
 NBboot.ci <- NBboot[[1]]
 ## Extract vpcs
 NBboot.vpc <- NBboot[[2]]
+}
 
-## Compute CI based on 100 bootstrap samples for the first two features 
+## Compute CI based on 100 bootstrap samples for the first feature
 ##  under vst. 
-VSTboot <- GetBootCI(simData, strains, 1:2, 100, method = "VST")
+VSTboot <- GetBootCI(simData, strains, 1, 100, method = "VST")
 
 }
 
