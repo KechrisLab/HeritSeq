@@ -1,8 +1,6 @@
 
 ############################ Functions for heritability analysis ##############################
 
-
-
 ######## Packages that we need ########
 
 # You only need to install once #
@@ -19,14 +17,14 @@
 # biocLite("DESeq2")
 
 
-requireNamespace("lme4", quietly = TRUE)
-requireNamespace("glmmADMB", quietly = TRUE)
-requireNamespace("tweedie", quietly = TRUE)
-requireNamespace("cplm", quietly = TRUE)
-requireNamespace("pbapply", quietly = TRUE)
-requireNamespace("DESeq2", quietly = TRUE)
-requireNamespace("MASS", quietly = TRUE)
-requireNamespace("SummarizedExperiment", quietly = TRUE)
+library("lme4", quietly = TRUE)
+library("glmmADMB", quietly = TRUE)
+library("tweedie", quietly = TRUE)
+library("cplm", quietly = TRUE)
+library("pbapply", quietly = TRUE)
+library("DESeq2", quietly = TRUE)
+library("MASS", quietly = TRUE)
+library("SummarizedExperiment", quietly = TRUE)
 
 
 ###############################################################################
@@ -62,8 +60,8 @@ getNBReads <- function(vec.num.rep, beta0, sig2.strain, phi){
   
   NBcounts <- lapply(1:num.strains, function(x){
     counts.x <- MASS::rnegbin(n = vec.num.rep[x],
-                        mu = strain.means[x],
-                        theta = 1/phi)
+                              mu = strain.means[x],
+                              theta = 1/phi)
     return(counts.x)
   })
   NBcounts <- matrix(do.call(c, NBcounts), nrow = 1)
@@ -108,7 +106,7 @@ getNBReads <- function(vec.num.rep, beta0, sig2.strain, phi){
 #' nbData <- getNBReadMatrix(rep.num, b0, sig2s, phis)
 #' @export
 getNBReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, phis){
-
+  
   num.probes <- length(beta0s)
   CountMatrix <- lapply(1:num.probes, function(x){
     probe.x <- getNBReads(vec.num.rep, beta0s[x], 
@@ -210,7 +208,7 @@ getCPReads <- function(vec.num.rep, beta0, sig2.strains, p, phi){
 #' str <- do.call(c, str)
 #' @export
 getCPReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, ps, phis){
-
+  
   num.probes <- length(beta0s)
   CountMatrix <- lapply(1:num.probes, function(x){
     probe.x <- getCPReads(vec.num.rep, beta0s[x], 
@@ -246,10 +244,10 @@ getCPReadMatrix <- function(vec.num.rep, beta0s, sig2.strains, ps, phis){
 #' @export
 fitNBMM <- function(CountMatrix, Strains, test = FALSE){
   if(is.null(dim(CountMatrix))){
-      print('Fitting a single feature.')
-      CountMatrix <- matrix(CountMatrix, nrow = 1)
+    print('Fitting a single feature.')
+    CountMatrix <- matrix(CountMatrix, nrow = 1)
   }
-
+  
   GeneIDs <- rownames(CountMatrix)
   paras <- t(pbapply::pbsapply(1:nrow(CountMatrix), function(x){
     CountVector <- CountMatrix[x, ]
@@ -257,7 +255,7 @@ fitNBMM <- function(CountMatrix, Strains, test = FALSE){
     dat_sub <- data.frame(expr = as.numeric(CountVector), strain = Strains)
     para <- tryCatch({
       model_sub2 <- glmmADMB::glmmadmb(formula = expr ~ 1 + (1|strain), 
-                             data = dat_sub, family = 'nbinom', link = 'log')
+                                       data = dat_sub, family = 'nbinom', link = 'log')
       sigma_a2 <- as.numeric(model_sub2$S$strain[1])
       beta0 <- as.numeric(model_sub2$b)
       phi <- 1/model_sub2$alpha
@@ -265,7 +263,7 @@ fitNBMM <- function(CountMatrix, Strains, test = FALSE){
       
       if (test){
         model_sub2_red <- glmmADMB::glmmadmb(formula = expr ~ 1, data = dat_sub, 
-                                   family = 'nbinom', link = 'log')
+                                             family = 'nbinom', link = 'log')
         test.stat <- 2*logLik(model_sub2) - 2*logLik(model_sub2_red)
         if (test.stat<1e-6) {test.stat <- 0} 
         # test.stat <- round(test.stat, digits = 1e-6)
@@ -278,7 +276,7 @@ fitNBMM <- function(CountMatrix, Strains, test = FALSE){
     }, error = function(err){
       print(paste('Using alt method for', GeneID))
       model_sub <- try({lme4::glmer.nb(formula = expr ~ 1 + (1|strain), 
-                                 data = dat_sub, verbose = F)}, silent=T)
+                                       data = dat_sub, verbose = F)}, silent=T)
       
       if (class(model_sub) != "try-error"){
         sum_model_sub <- summary(model_sub)
@@ -293,7 +291,7 @@ fitNBMM <- function(CountMatrix, Strains, test = FALSE){
       
       if (test){
         model_sub_red <- try({MASS::glm.nb(formula = expr ~ 1, 
-                                     data = dat_sub, link = 'log')}, 
+                                           data = dat_sub, link = 'log')}, 
                              silent = TRUE)
         if (class(model_sub) != "try-error" & 
             class(model_sub_red) != "try-error"){
@@ -373,7 +371,7 @@ compute1NBVPC <- function(beta0, sigma_a2, phi){
 #' text(50, 0.92, "h2 = 0.9", col = "red")
 #' @export
 computeAllNBVPC <- function(para){
-
+  
   if(is.null(dim(para))){
     vpcs <- compute1NBVPC(para[1], para[2], para[3])
   }else{
@@ -415,7 +413,7 @@ computeAllNBVPC <- function(para){
 #' ## Fit CPMM on the entire dataset takes about 30 minutes. For the purpose 
 #' ##  of illustration, here we only fit on the first 10 features.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' ## Fit CPMM for the first two features using the default optimizer. 
 #' result.cp <- fitCPMM(simData[1, ], strains)
 #' ## Extract parameters
@@ -450,14 +448,11 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   #   "beta0", "p", sigma_a2", "phi". Row names are gene names; the second member of the list  
   #   consists of p-values for testing the hypothesis that sigma_a2 = 0.
   
-  # suppressMessages(suppressWarnings(requireNamespace("cplm")))
-  suppressPackageStartupMessages(requireNamespace("cplm", depends = TRUE, 
-                                                  quietly = TRUE))
-  attachNamespace("package:cplm")
-  
+  # suppressMessages(suppressWarnings(library(cplm)))
+
   if(is.null(dim(CountMatrix))){
-      print('Fitting a single feature.')
-      CountMatrix <- matrix(CountMatrix, nrow = 1)
+    print('Fitting a single feature.')
+    CountMatrix <- matrix(CountMatrix, nrow = 1)
   }
   
   paras <- t(pbapply::pbsapply(1:nrow(CountMatrix), function(x){
@@ -466,10 +461,10 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     
     fit <- tryCatch({
       fit1 <- cplm::cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
-                     optimizer = optimizer)
+                           optimizer = optimizer)
     }, error=function(err){
       fit1 <- try({cplm::cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
-                          optimizer = optimizer)}) 
+                                optimizer = optimizer)}) 
       return(fit1)
     })
     
@@ -487,12 +482,8 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     
     ### Fitting the reduced model for testing significance of the random effect ###
     if (test){
-      detach("package:cplm", unload=TRUE)
-      # unloadNamespace("cplm")
-      suppressMessages(suppressWarnings(requireNamespace("cplm", 
-                                                         depends = TRUE,
-                                                         quietly = TRUE)))
-      attachNamespace("package:cplm")
+#       detach("package:cplm", unload=TRUE)
+#       suppressMessages(suppressWarnings(library(cplm)))
       fit.red <- tryCatch({
         fit2 <- cplm::cpglm(expr ~ 1, data = dat_sub, optimizer = optimizer)
       }, error=function(err){
@@ -514,12 +505,8 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
       para <- c(para, pval)
     }
     
-    detach("package:cplm", unload=TRUE)
-    # unloadNamespace("cplm")
-    suppressMessages(suppressWarnings(requireNamespace("cplm", 
-                                                       depends = TRUE,
-                                                       quietly = TRUE)))
-    attachNamespace("package:cplm")
+#     detach("package:cplm", unload=TRUE)
+#     suppressMessages(suppressWarnings(library(cplm)))
     return(para)
   }))
   
@@ -582,7 +569,7 @@ compute1CPVPC <- function(beta0, sigma_a2, p, phi){
 #' text(50, 0.92, "h2 = 0.9", col = "red")
 #' @export
 computeAllCPVPC <- function(para){
-
+  
   if(is.null(dim(para))){
     vpcs <- compute1CPVPC(para[1], para[2], para[3], para[4])
   }else{
@@ -621,7 +608,7 @@ compute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL,
   
   dat_sub <- data.frame(expr = CountVector, strain = Strains)
   model_sub <- lme4::lmer(formula = expr ~ 1 + (1|strain), data = dat_sub, 
-                    weights = PriorWeight)
+                          weights = PriorWeight)
   sum_model_sub <- summary(model_sub)
   residual_var <- (sum_model_sub$sigma)^2
   random_intercept_var <- unlist(sum_model_sub$varcor)
@@ -674,7 +661,7 @@ compute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL,
 #' @export
 computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL, 
                               test = FALSE){
-
+  
   VPC <- pbapply::pbsapply(1:nrow(CountMatrix), function(x){
     vpc.x <- compute1lmerVPC(CountMatrix[x, ], Strains, PriorWeights[x, ],
                              test = test)
@@ -709,9 +696,9 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 
 
 
-#' Compute confidence intervals for one or more features.
+#' SHORT DESCRIPTION OF GETBOOTCI
 #' 
-#' Compute confidence intervals based on parametric bootstrap for one or more features.
+#' LONG DESCRIPTION OF GETBOOTCI
 #' 
 #' @param CountMatrix The data matrix; rows are features, columns are samples
 #' @param Strains The vector of strains corresponding to each sample, length = ncol(CountMatrix)
@@ -727,7 +714,7 @@ computeAlllmerVPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' @examples
 #' ## Compute CI based on 100 bootstrap samples for the first feature 
 #' ##  under NBMM. It takes a few minutes.
-#' \donttest{
+#' \dontrun{
 #' NBboot <- GetBootCI(simData, strains, 1, 100)
 #' ## Extract CI
 #' NBboot.ci <- NBboot[[1]]
@@ -815,7 +802,7 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
       vsd <- DESeq2::varianceStabilizingTransformation(cds, fitType = "local")
       vsd <- SummarizedExperiment::assay(vsd)
       # vsd <- DESeq2::getVarianceStablizedData(cds)
-
+      
       all.vpcs[i,] = computeAlllmerVPC(vsd, Strains)$vpcs
     }
     
