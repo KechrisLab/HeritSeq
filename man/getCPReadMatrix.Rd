@@ -15,10 +15,10 @@ getCPReadMatrix(vec.num.rep, alphas, sigma2s, ps, phis)
 \item{sigma2s}{Random effect variance vector \eqn{\sigma^2_g}'s, 
 \eqn{1 \times \texttt{num.features}}{1 x num.features}.}
 
-\item{ps}{Tweedie parameter in CP models \eqn{p_g}'s, a 
+\item{ps}{Tweedie parameter in CP models, \eqn{p_g}'s, a 
 \eqn{1 \times \texttt{num.features}}{1 x num.features} vector.}
 
-\item{phis}{Dispersion parameter in CP models \eqn{\phi_g}'s, a 
+\item{phis}{Dispersion parameter in CP models, \eqn{\phi_g}'s, a 
 \eqn{1 \times \texttt{num.features}}{1 x num.features} vector.}
 }
 \value{

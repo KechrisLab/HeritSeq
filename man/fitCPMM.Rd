@@ -27,19 +27,18 @@ parameter \eqn{p_g}, random effect variance \eqn{\sigma^2_g}, and dispersion
 \eqn{\phi_g}. Row names are feature names. If the argument test is set to
 be true, the second object of the list consists of p-values for testing 
 the hypothesis that random effect \eqn{\sigma_a^2 = 0}{sigma_a2 = 0}; 
-otherwise, the second object is NULL. 
-
-## Fit CPMM on the entire example dataset takes about 30 minutes. For the 
-## purpose of illustration, here we only fit on the first 2 features.
+otherwise, the second object is NULL.
 }
 \description{
 Fit a CPMM for one or more features and output the fit parameters. 
-It is used before the function compute.CP.VPC(). This function also allows 
+It is used before the function computeCPVPC(). This function also allows 
 to test the presence of heritability via random effect variance of the model.
 }
 \examples{
 \donttest{
-## Fit CPMM for the first two features and test the presence of heritability. 
+## Fit CPMM for the first two features and test the presence of 
+## heritability. For the purpose of illustration, here we only fit on 
+## the first 2 features.
 result.cp <- fitCPMM(simData[1:2, ], strains, test = TRUE)
 ## Extract parameters
 para.cp <- result.cp[[1]]

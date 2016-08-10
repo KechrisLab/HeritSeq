@@ -28,7 +28,7 @@ total number of
 \description{
 Simulate a (possibly unbalanced) count matrix from NBMM.
 Under NBMM, an observed number of reads aligned to feature/gene \eqn{g}, 
-\eqn{Y_{gsr}}, follows a negative binomial distribution with mean 
+\eqn{Y_{gsr}}, follows a negative binomial (NB) distribution with mean 
 \eqn{\mu_{gs}} and variance \eqn{\mu_{gs}+\phi_{g} \mu_{gs}^2}, where 
 \eqn{\phi_g} is the dispersion parameter, shared across strains. The 
 generalized linear model uses a \eqn{\log}-link:\cr

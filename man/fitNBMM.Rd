@@ -25,7 +25,7 @@ consists of p-values for testing the hypothesis that the random effect
 }
 \description{
 Fit NBMM for one or more features and output the fit parameters. 
-It is used before the function compute.NB.VPC(). This function also allows 
+It is used before the function computeNBVPC(). This function also allows 
 to test the presence of heritability via random effect variance of the model.
 }
 \examples{
