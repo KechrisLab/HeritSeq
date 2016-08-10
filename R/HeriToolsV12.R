@@ -726,8 +726,7 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL,
 #' of the p-values from testing the presence of random effect. If test = FALSE, 
 #' the second object is NULL.
 #' @examples
-#' ## Compute VPC for each feature under linear mixed models for Gaussian-like
-#' datasets. 
+#' ## Compute VPC for each feature under linear mixed models for Gaussian-like datasets. 
 #' 
 #' ## Provide normalized data and include hypothesis testing on presence of
 #' ## heritability:
