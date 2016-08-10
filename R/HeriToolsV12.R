@@ -204,7 +204,7 @@ getCPReads <- function(vec.num.rep, alpha_g, sigma2_g, p_g, phi_g){
 #' @param vec.num.rep A vector of replicate numbers for each strain.
 #' @param alphas Intercept vector \eqn{\alpha_g}'s, 
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features}.
-#' @param sigma2s Random effect variance vector \eqn{\simga^2_g}'s, 
+#' @param sigma2s Random effect variance vector \eqn{\sigma^2_g}'s, 
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features}.
 #' @param ps Tweedie parameter in CP models \eqn{p_g}'s, a 
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features} vector.
