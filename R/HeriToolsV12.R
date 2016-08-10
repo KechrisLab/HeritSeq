@@ -90,7 +90,7 @@ getNBReads <- function(vec.num.rep, alpha_g, sigma2_g, phi_g){
 #' 
 #' Simulate a (possibly unbalanced) count matrix from NBMM.
 #' Under NBMM, an observed number of reads aligned to feature/gene \eqn{g}, 
-#' \eqn{Y_{gsr}}, follows a negative binomial distribution with mean 
+#' \eqn{Y_{gsr}}, follows a negative binomial (NB) distribution with mean 
 #' \eqn{\mu_{gs}} and variance \eqn{\mu_{gs}+\phi_{g} \mu_{gs}^2}, where 
 #' \eqn{\phi_g} is the dispersion parameter, shared across strains. The 
 #' generalized linear model uses a \eqn{\log}-link:\cr
@@ -206,9 +206,9 @@ getCPReads <- function(vec.num.rep, alpha_g, sigma2_g, p_g, phi_g){
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features}.
 #' @param sigma2s Random effect variance vector \eqn{\sigma^2_g}'s, 
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features}.
-#' @param ps Tweedie parameter in CP models \eqn{p_g}'s, a 
+#' @param ps Tweedie parameter in CP models, \eqn{p_g}'s, a 
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features} vector.
-#' @param phis Dispersion parameter in CP models \eqn{\phi_g}'s, a 
+#' @param phis Dispersion parameter in CP models, \eqn{\phi_g}'s, a 
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features} vector.
 #' @return A \eqn{G \times N}{G x N} matrix with CP reads. \eqn{N} is the 
 #'   total number of samples; \eqn{G} is the number of features. Column names 
@@ -254,7 +254,7 @@ getCPReadMatrix <- function(vec.num.rep, alphas, sigma2s, ps, phis){
 #' Fit negative binomial mixed models (NBMM) for one or more features.
 #' 
 #' Fit NBMM for one or more features and output the fit parameters. 
-#' It is used before the function compute.NB.VPC(). This function also allows 
+#' It is used before the function computeNBVPC(). This function also allows 
 #' to test the presence of heritability via random effect variance of the model.
 #' 
 #' @param CountMatrix Sequencing count matrix for a list of features. Each row 
@@ -405,7 +405,7 @@ compute1NBVPC <- function(alpha_g, sigma2_g, phi_g){
 #' is "NB-fit"; row names are the feature names.
 #' @examples
 #' ## Compute VPC for each feature under negative binomial mixed model.
-#' vpc.nb <- compute.NB.VPC(para_nb)
+#' vpc.nb <- computeNBVPC(para_nb)
 #' 
 #' ## Visulize the distribution of the VPC's. 
 #' hist(vpc.nb, breaks = 50, col = "cyan")
@@ -416,7 +416,7 @@ compute1NBVPC <- function(alpha_g, sigma2_g, phi_g){
 #' abline(h = 0.9, lty = 2, col = "red")
 #' text(50, 0.92, "h2 = 0.9", col = "red")
 #' @export
-compute.NB.VPC <- function(para){
+computeNBVPC <- function(para){
 
   if(is.null(dim(para))){
     vpcs <- compute1NBVPC(para[1], para[2], para[3])
@@ -444,7 +444,7 @@ compute.NB.VPC <- function(para){
 #' Fit compound Poisson mixed effect models (CPMM) for one or more features.
 #' 
 #' Fit a CPMM for one or more features and output the fit parameters. 
-#' It is used before the function compute.CP.VPC(). This function also allows 
+#' It is used before the function computeCPVPC(). This function also allows 
 #' to test the presence of heritability via random effect variance of the model.
 #' 
 #' @param CountMatrix Sequencing count matrix for one or more features. Each 
@@ -464,11 +464,11 @@ compute.NB.VPC <- function(para){
 #' the hypothesis that random effect \eqn{\sigma_a^2 = 0}{sigma_a2 = 0}; 
 #' otherwise, the second object is NULL. 
 #' 
-#' ## Fit CPMM on the entire example dataset takes about 30 minutes. For the 
-#' ## purpose of illustration, here we only fit on the first 2 features.
 #' @examples
 #' \donttest{
-#' ## Fit CPMM for the first two features and test the presence of heritability. 
+#' ## Fit CPMM for the first two features and test the presence of 
+#' ## heritability. For the purpose of illustration, here we only fit on 
+#' ## the first 2 features.
 #' result.cp <- fitCPMM(simData[1:2, ], strains, test = TRUE)
 #' ## Extract parameters
 #' para.cp <- result.cp[[1]]
@@ -496,17 +496,15 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   #   member of the list consists of p-values for testing the hypothesis that 
   #   sigma2_g = 0.
   
-  # suppressMessages(suppressWarnings(requireNamespace("cplm")))
-  suppressPackageStartupMessages(requireNamespace("cplm", depends = TRUE, 
-                                                  quietly = TRUE))
-  attachNamespace("cplm")
-  
+
   if(is.null(dim(CountMatrix))){
       print('Fitting a single feature.')
       CountMatrix <- matrix(CountMatrix, nrow = 1)
   }
   
   paras <- t(pbapply::pbsapply(1:nrow(CountMatrix), function(x){
+    attachNamespace("cplm")
+    
     CountVector <- CountMatrix[x, ]
     dat_sub <- data.frame(expr = as.numeric(CountVector), strain = Strains)
     
@@ -534,10 +532,8 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     ### Fitting the reduced model for testing significance of the random effect ###
     if (test){
       detach("cplm", unload=TRUE)
-      # unloadNamespace("cplm")
-      suppressMessages(suppressWarnings(requireNamespace("cplm", 
-                                                         depends = TRUE,
-                                                         quietly = TRUE)))
+      suppressMessages(suppressWarnings(
+        requireNamespace("cplm",depends = TRUE, quietly = TRUE)))
       attachNamespace("cplm")
       fit.red <- tryCatch({
         fit2 <- cplm::cpglm(expr ~ 1, data = dat_sub, optimizer = optimizer)
@@ -548,7 +544,7 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
       
       if (class(fit.red) != "try-error" & class(fit) != "try-error"){
         test.stat <- 2*logLik(fit)+AIC(fit.red)-2
-        #-2*sum(log(dtweedie(dat_sub$expr,fit.red$p,exp(fit.red$coefficients),fit.red$phi)))
+        
         if (test.stat<1e-6) {test.stat <- 0}
         pval <- 0.5*pchisq(test.stat, df = 1, lower.tail = FALSE) + 
           0.5*as.numeric(test.stat == 0)
@@ -561,11 +557,9 @@ fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     }
     
     detach("cplm", unload=TRUE)
-    # unloadNamespace("cplm")
-    suppressMessages(suppressWarnings(requireNamespace("cplm", 
-                                                       depends = TRUE,
-                                                       quietly = TRUE)))
-    attachNamespace("cplm")
+    suppressMessages(suppressWarnings(
+      requireNamespace("cplm", depends = TRUE, quietly = TRUE)))
+
     return(para)
   }))
   
@@ -634,7 +628,7 @@ compute1CPVPC <- function(alpha_g, sigma2_g, p_g, phi_g){
 #'   
 #' @examples
 #' ## Compute VPC for each feature under compound Poisson mixed models. 
-#' vpc.cp <- compute.CP.VPC(para_cp) 
+#' vpc.cp <- computeCPVPC(para_cp) 
 #' 
 #' ## Visulize the distribution of the vpcs. 
 #' hist(vpc.cp, breaks = 50, col = "cyan")
@@ -644,7 +638,7 @@ compute1CPVPC <- function(alpha_g, sigma2_g, p_g, phi_g){
 #' abline(h = 0.9, lty = 2, col = "red")
 #' text(50, 0.92, "h2 = 0.9", col = "red")
 #' @export
-compute.CP.VPC <- function(para){
+computeCPVPC <- function(para){
 
   if(is.null(dim(para))){
     vpcs <- compute1CPVPC(para[1], para[2], para[3], para[4])
@@ -669,8 +663,7 @@ compute.CP.VPC <- function(para){
 ### Fit linear mixed models and compute VPCs.
 
 # (INTERNAL)
-fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL, 
-                            test = FALSE){
+fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL, test = FALSE){
   # Compute the VPC value for one feature
   #
   # CountVector: sequencing counts for the feature.
@@ -709,8 +702,8 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL,
 #' Fit linear mixed models (LMM) and compute the VPC values for one or more 
 #' features.
 #' 
-#' Fit the Gaussian-like data to linear mixed models (LMM) and compute the 
-#' VPC values for one or more features.
+#' Fit the Gaussian-like data to LMM and compute the VPC values for 
+#' one or more features.
 #' 
 #' @param CountMatrix Sequencing count matrix for one or more features. Each 
 #' row is for one feature, and the columns are for samples. 
@@ -730,7 +723,7 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL,
 #' 
 #' ## Provide normalized data and include hypothesis testing on presence of
 #' ## heritability:
-#' result.vst <- fitandcompute.lmer.VPC(simData_vst, strains, test = TRUE)
+#' result.vst <- fitandcompute_lmer_VPC(simData_vst, strains, test = TRUE)
 #' ## Extract parameters
 #' vpc.vst <- result.vst[[1]]
 #' ## Extract p-values
@@ -739,7 +732,7 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL,
 #' ## Visulize the distribution of p-values.
 #' hist(pval.vst, breaks = 30, col = "cyan")
 #' @export
-fitandcompute.lmer.VPC <- function(CountMatrix, Strains, PriorWeights = NULL, 
+fitandcompute_lmer_VPC <- function(CountMatrix, Strains, PriorWeights = NULL, 
                               test = FALSE, VPCname = "LMM"){
 
   VPC <- pbapply::pbsapply(1:nrow(CountMatrix), function(x){
@@ -788,11 +781,11 @@ fitandcompute.lmer.VPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' @param which.features A \eqn{1\times k} vector of select feature numbers 
 #' for which CI is desired. \eqn{k\leq G}.
 #' @param num.boot Number of bootstraps.
-#' @param method Which method should be used, "CP-fit", "NB-fit", or "VST". 
-#' "VST" method bootstraps data under negative binomial mixed models.
+#' @param method Which method should be used, "CP-fit", "NB-fit" (default), 
+#' or "VST". "VST" method bootstraps data under negative binomial mixed models.
 #' @param alpha A numerical value between 0 and 1, indicating the significance 
 #' level of the CI. The CI will be \eqn{100*(1-\alpha)}{100*(1-alpha)} 
-#' percent CI.
+#' percent CI. Default value is 0.05.
 #' @param optimizer A character string that determines which optimization 
 #' routine is to be used. It is only used for method = "CP-fit". Possible 
 #' choices are "nlminb" (default), "L-BFGS-B", and "bobyqa".
@@ -804,7 +797,7 @@ fitandcompute.lmer.VPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' ## Compute CI based on 100 bootstrap samples for the first feature 
 #' ##  under NBMM. It takes a few minutes.
 #' \donttest{
-#' NBboot <- GetBootCI(simData, strains, 1, 100)
+#' NBboot <- getBootCI(simData, strains, 1, 100)
 #' ## Extract CI
 #' NBboot.ci <- NBboot[[1]]
 #' ## Extract vpcs
@@ -813,10 +806,10 @@ fitandcompute.lmer.VPC <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' 
 #' ## Compute CI based on 100 bootstrap samples for the first feature
 #' ##  under vst. 
-#' VSTboot <- GetBootCI(simData, strains, 1, 100, method = "VST")
+#' VSTboot <- getBootCI(simData, strains, 1, 100, method = "VST")
 #' 
 #' @export
-GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
+getBootCI = function(CountMatrix, Strains, which.features, num.boot,
                      method="NB-fit", alpha=0.05, optimizer = "nlminb"){
   all.vpcs = matrix(NA, nrow = length(which.features), ncol=num.boot)
   vec.num.rep = as.numeric(table(Strains))
@@ -832,7 +825,7 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
                                   rep(fit$paras[i,2],num.boot),
                                   rep(fit$paras[i,3],num.boot))
       fit.i = fitNBMM(boot.data, Strains)
-      all.vpcs[i,] = compute.NB.VPC(fit.i$paras)
+      all.vpcs[i,] = computeNBVPC(fit.i$paras)
     }
     
     intervals = cbind( apply(all.vpcs, 1, quantile, probs = alpha/2),
@@ -856,7 +849,7 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
                                   rep(fit$paras[i,3],num.boot),
                                   rep(fit$paras[i,4],num.boot))
       fit.i = fitCPMM(boot.data, Strains, optimizer = optimizer)
-      all.vpcs[i,] = compute.CP.VPC(fit.i$paras)
+      all.vpcs[i,] = computeCPVPC(fit.i$paras)
     }
     
     intervals = cbind( apply(all.vpcs, 1, quantile, probs = alpha/2),
@@ -896,7 +889,7 @@ GetBootCI = function(CountMatrix, Strains, which.features, num.boot,
       vsd <- DESeq2::varianceStabilizingTransformation(cds, fitType = "local")
       vsd <- SummarizedExperiment::assay(vsd)
 
-      all.vpcs[i,] = fitandcompute.lmer.VPC(vsd, Strains)$vpcs
+      all.vpcs[i,] = fitandcompute_lmer_VPC(vsd, Strains)$vpcs
     }
     
     intervals = cbind( apply(all.vpcs, 1, quantile, probs = alpha/2),
