@@ -13,16 +13,16 @@ params:
 ---
 
 ## Overview
-The **heritseq** package provides heritability score analyses under linear mixed models (LMM) or generalized linear mixed models (GLMM) for count data motivated by high-throughput sequencing. It is applicable to counts with biological replicates. This package includes:
+The **heritseq** package provides heritability score analyses under linear mixed models (LMM) or generalized linear mixed models (GLMM) for count data motivated by high-throughput sequencing. It is applicable to counts with biological replicates. This package includes functions to:
 
-- Compute heritability score under LMM for normalized/transformed dataset, and under negative binomial mixed models (NBMM) or compound Poisson mixed models (CPMM) for data without transformations.  
-- Test presence of heritability under LMM, NBMM or CPMM.
-- Generate confidence intervals of estimated heritability score. 
-- Create synthetic high-throughput sequencing datasets using NBMM or CPMM. 
+- compute heritability score under LMM for normalized/transformed dataset, and under negative binomial mixed models (NBMM) or compound Poisson mixed models (CPMM) for data without transformations.  
+- test presence of heritability under LMM, NBMM or CPMM.
+- generate confidence intervals of estimated heritability score. 
+- simulate synthetic high-throughput sequencing datasets using NBMM or CPMM. 
 
 See [^1] for model details and performance comparisons. 
 
-[^1]: *Model based heritability scores for high-throughput sequencing data*, Pratyaydipta Rudra, Wen J Shi, Brian Vestal, Pamela H Russell, Aaron Odell, Robin Dowell, Richard Radcliffe, Laura M Saba, Katerina Kechris. 
+[^1]: Pratyaydipta Rudra, Wen J Shi, Brian Vestal, Pamela H Russell, Aaron Odell, Robin Dowell, Richard Radcliffe, Laura M Saba, Katerina Kechris. *Model based heritability scores for high-throughput sequencing data*. (submitted). 
 
 ## Example dataset
 The **heritseq** package includes an example high-throughput sequencing dataset 
@@ -46,46 +46,46 @@ We will use *simData* to illustrate the procedure of heritability estimation
 under different models. 
 
 Before fitting any model, make sure that the input dataset has been adjusted for 
-library sizes and batch bias. The *simData* is post such adjustment, we 
+library sizes and batch bias. The dataset *simData* is post such adjustment, we 
 therefore omit the process. 
 
 ### NBMM
-Under NBMM, an observed number of reads aligned to feature/gene $g$, $Y_{gsr}$, follows a negative binomial distribution with mean $\mu_{gs}$ and variance $\mu_{gs}+\phi_{g} \mu_{gs}^2$, where $\phi_{g}$ is the dispersion parameter, shared across strains. The generalized linear model uses a $\log$-link: 
+Under NBMM, an observed number of reads aligned to feature/gene $g$, $Y_{gsr}$, follows a negative binomial distribution with mean $\mu_{gs}$ and variance $\mu_{gs}+\phi_{g} \mu_{gs}^2$, where $\phi_{g}$ is the dispersion parameter for feature/gene $g$, shared across strains. The generalized linear model uses a $\log$-link: 
 $\log(\mu_{gs}) = \alpha_{g}+ b_{gs}, \;\;b_{gs}\sim N(0, \sigma^{2}_{g}).$
 
 The corresponding heritability score, aka Variance Partition Coefficient (VPC),
-is 
-$VPC_g^{NBMM} = \frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{\sigma^2_{g}} + e^{-\alpha_g-\sigma^2_{g}/2} }.$
+is $\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{\sigma^2_{g}} + e^{-\alpha_g-\sigma^2_{g}/2} }.$
 
 Compute VPC for all features using NBMM:
 ```{r, eval = FALSE}
 result.nb <- fitNBMM(CountMatrix = simData, Strains = strains, test = FALSE)
-vpc.nb <- computeAllNBVPC(para = result.nb[[1]])
+vpc.nb <- computeNBVPC(para = result.nb[[1]])
 ```
-The function *fitNBMM( )* returns a list of two. The first list consists the fitted parameters $\alpha_{g}, \sigma^{2}_{g}, \phi_{g}$. The second list provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise.
+The function *fitNBMM( )* returns a list with two objects. The first object is a $G \times 3$ matrix indicating the fitted parameters for each feature, where $G$ is the total number of features/genes. The columns are ordered by the fitted parameters $\alpha_{g}, \sigma^{2}_{g}, \phi_{g}$. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).
 
-The function *computeAllNBVPC( )* takes in the list of NBMM parameters and outputs the corresponding VPC values. 
+The function *computeNBVPC( )* takes in the list of NBMM parameters and outputs the corresponding VPC values. 
 
 ### CPMM 
-For a CP random variable $Y_{gsr}$ with mean $\mu_{gs}$, its variance can be expressed as $\phi_{g}\mu_{gs}^{p_{g}}$, for some $1<p_{g}<2$. Under the CPMM, with a $\log$-link, the regression on the mean has the same form as the NBMM:
+For a CP random variable $Y_{gsr}$ with mean $\mu_{gs}$, its variance can be expressed as $\phi_{g}\mu_{gs}^{p_{g}}$, for some tweedie parameter $1<p_{g}<2$ and dispersion parameter $\phi_{g}$ for feature/gene $g$ [^2]. Under the CPMM, with a $\log$-link, the regression on the mean has the same form as the NBMM:
 $\log(\mu_{gs}) = \alpha_{g}+ b_{gs}, \;\;b_{gs}\sim N(0, \sigma^{2}_{g}).$ 
 
-The corresponding VPC is $VPC_g^{CPMM} = \frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 +  \phi_{g} e^{(p_{g}-2)\alpha_{g}+(p_{g}^2/2-1)\sigma^2_{g}}}.$
+The corresponding VPC is $\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 +  \phi_{g} e^{(p_{g}-2)\alpha_{g}+(p_{g}^2/2-1)\sigma^2_{g}}}.$
 
 Compute VPC for all features using CPMM:
 ```{r, eval = FALSE}
 result.cp <- fitCPMM(CountMatrix = simData, Strains = strains, test = FALSE, optimizer = "nlminb")
-vpc.cp <- computeAllCPVPC(para = result.cp[[1]])
+vpc.cp <- computeCPVPC(para = result.cp[[1]])
 ```
-Similar to *fitNBMM( )*, the function *fitCPMM( )* returns a list of two. The first list consists the fitted parameters $\alpha_{g}, \sigma^{2}_{g}, p_{g}, \phi_{g}$. The second list provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise.
+Similar to *fitNBMM( )*, the function *fitCPMM( )* returns a list of two objects. The first object consists the fitted parameters $\alpha_{g}, \sigma^{2}_{g}, p_{g}, \phi_{g}$. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).
 
-The function *computeAllCPVPC( )* takes in the list of CPMM parameters and outputs the corresponding VPC values. 
+The function *computeCPVPC( )* takes in the list of CPMM parameters and outputs the corresponding VPC values. 
 
+[^2]: Tweedie, M. C. K. (1981). *An index which distinguishes between some important exponential families*. Statistics: applications and new directions, 579–604.
 
 ### VST 
-In order to use a linear mixed model (LMM), the sequence reads need to be first 
+In order to use a linear mixed model (LMM), the sequence reads first need to be 
 transformed to Gaussian-like data. The variance stablizing transformation (VST) 
-was introduced in the package **DESeq2**. It is based on negative binomial assumption of the original data. 
+was introduced in the package **DESeq2** [^3]. It is based on a negative binomial assumption of the original data. 
 
 Transform *simData* using VST and fit features using LMM:
 ```{r, eval = FALSE}
@@ -100,18 +100,24 @@ cds <- estimateDispersions(object = cds, fitType = "local")
 vsd <- varianceStabilizingTransformation(cds, fitType = "local")
 simData.vst <- assay(x = vsd)
 
-vpc.vst <- computeAlllmerVPC(CountMatrix = simData.vst, 
-                             Strains = strains, 
-                             PriorWeight = NULL, 
-                             test = FALSE)[[1]]
+vpc.vst <- fitandcompute_lmer_VPC(CountMatrix = simData.vst,
+                                  Strains = strains, 
+                                  PriorWeight = NULL,
+                                  test = FALSE,
+                                  VPCname = "VST")[[1]]
 ```
-The function *computeAlllmerVPC( )* fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and result for testing presence of heritability. If test = TRUE, the second part of list are the p-values; otherwise, it is NULL. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.    
+
+The function *fitandcompute_lmer_VPC* fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package **lme4** [^4]. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.    
+
+[^3]: Love MI, Huber W and Anders S (2014). *Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2*. Genome Biology, 15, pp. 550.
+
+[^4]: Douglas Bates, Martin Maechler, Ben Bolker, Steve Walker (2015). *Fitting Linear Mixed-Effects Models Using lme4*. Journal of Statistical Software, 67(1), 1-48.
 
 ### Voom
 **limma** voom is another popular method to transform counts to Gaussian-like 
-data. It is a less preferrable method for computing VPC comparing to the ones above. 
+data [^5]. It is a less preferrable method for computing VPC comparing to the ones above. 
 
-Transform *simData* using Voom and fit features using LMM:
+Transform *simData* using Voom and fit features using LMM as above:
 ```{r, eval = FALSE}
 library(limma)
 voomed.librarySize <- voom(counts = simData, 
@@ -120,12 +126,15 @@ voomed.librarySize <- voom(counts = simData,
 simData.voom <- voomed.librarySize$E
 weights.voom <- voomed.librarySize$weights
 
-vpc.voom <- computeAlllmerVPC(CountMatrix = simData.voom, 
-                              Strains = strains,
-                              PriorWeights = weights.voom, 
-                              test = FALSE)[[1]]
+vpc.voom <- fitandcompute_lmer_VPC(CountMatrix = simData.voom,
+                                   Strains = strains,
+                                   PriorWeights = weights.voom,
+                                   test = FALSE,
+                                   VPCname = "Voom")[[1]]
 ```
-Note that the Voom method does provide a piror weight.  
+Note that the Voom method does provide a prior weight for fitting the regression.  
+
+[^5]: Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W and Smyth GK (2015). *limma powers differential expression analyses for RNA-sequencing and microarray studies*. Nucleic Acids Research, 43(7), pp. e47.
 
 ### Compare results from various methods
 In most cases, it is not clear which method is more appropriate for the given dataset. We suggest to fit multiple models and compare the estimation results. 
@@ -143,20 +152,20 @@ pairs.panels(x = h2, ellipses = FALSE, main = "Compare VPC")
 
 The function *pairs.panels( )* creates multiple panels for pairwise comparison of the methods. Along the diagonal are the histograms and kernel density plot of estimated VPC values. The panels below show pairwise comparison of the methods with locally weighted scatterplot smoothing (loess regression) in red. Above the diagonal are the correlation coefficient values. 
 
-The first three methods: NB, CP, and Voom present relatively consistent results. The features with top VPC scores are the same. 
+The first three methods: NB, CP, and Voom present relatively consistent results. The features with top VPC scores are similar. 
 
 
 ## Hypothesis testing
-Each of the four methods above also allows hypothesis testing for presence of heritability. Set Test = TRUE in the functions *fitNBMM( )*, *fitCPMM( )*, and *computeAlllmerVPC( )* for NBMM, CPMM, and LMM respectively. 
+As illustrated in the examples above, each of the four methods above also allows hypothesis testing for presence of heritability, simply by setting Test = TRUE in the functions *fitNBMM( )*, *fitCPMM( )*, and *fitandcompute_lmer_VPC( )* for NBMM, CPMM, and LMM respectively. 
 
 ## Confidence intervals
-The confidence intervals (CIs) can be generated using parametric bootstrap. When 
-choosing the VST method, the bootstraped data are from negative binomal models. 
-Due to its less superior performance, the Voom approach is excluded for the *GetBootCI( )* function. 
+The VPC confidence intervals (CIs) can be generated using a parametric bootstrap. When 
+choosing the VST method, the bootstraped data are generated from negative binomal models followed by variance stablized transformation. 
+Due to its less superior performance (detailed discussion can be found in Reference 1), the Voom approach is excluded for the *getBootCI( )* function. 
 
 Compute CI based on 100 boostrap samples for the first 3 feature:
 ```{r, eval = FALSE}
-boot.vst <- GetBootCI(CountMatrix = simData, 
+boot.vst <- getBootCI(CountMatrix = simData, 
                       Strains = strains, 
                       which.features = 1:3, 
                       num.boot = 100, 
@@ -164,38 +173,35 @@ boot.vst <- GetBootCI(CountMatrix = simData,
                       alpha=0.05, 
                       optimizer = "nlminb")
 ```
-The *GetBootCI( )* function computes CIs based on parametric bootstrap for one or more features. It allows three models: NB, CP, and VST. Although method = NB is the default, it is most time-consuming. When choosing method = VST, the input data *CountMatrix* should still be the un-transformed data. The argument *which.features* specifies the feature index(es) for which the CIs should be computed for; *alpha* defines the significance level; *optimizer* is only used for method = CP. 
+The *getBootCI( )* function computes CIs based on parametric bootstrap for one or more features. It allows three models: NB, CP, and VST. Although method = NB is the default, it is the most time-consuming. When choosing method = VST, the input data *CountMatrix* should still be the un-transformed data. The argument *which.features* specifies the feature indices for which the CIs should be computed for; *alpha* defines the significance level; *optimizer* is only used for method = CP. 
 
-## Generate synthetic datasets
-Synthetic sequencing data with biological replicates can be generated using 
+## Simulate synthetic datasets
+Synthetic sequencing data with biological replicates can be simulated using 
 functions *getNBReadMatrix( )* or *getCPReadMatrix( )*.
 
-First provide the essential parameters: 
+To siumulate counts under NBMM, first need to provide the essential parameters: 
 
 - number of biological replicates for each strain (rep.num) 
-- model intercepts $\alpha_g$'s (b0) 
+- model intercepts $\alpha_g$'s (a0s) 
 - strain variances $\sigma^2_g$'s (sig2s)
 - dispersions $\phi_g$'s (phis1)
 ```{r, eval = FALSE}
 rep.num <- c(3, 5, 2, 3, 4, 2)
-b0 <- c(-1, 1, 2, 5, 10)
+a0s <- c(-1, 1, 2, 5, 10)
 sig2s <- c(10, 0.2, 0.1, 0.03, 0.01)
 phis1 <- c(0.5, 1, 0.05, 0.01, 0.1)
-```
-
-Generate counts under NBMM.
-```{r, eval = FALSE}
+ 
 set.seed(1234)
 nbData <- getNBReadMatrix(vec.num.rep = rep.num, 
-                          beta0s = b0, 
+                          beta0s = a0s, 
                           sig2.strains = sig2s, 
                           phis = phis1)
 ```
 
-To create synthetic data under CPMM, the essential parameters are:
+To simulate synthetic data under CPMM, the essential parameters are:
 
 - number of biological replicates for each strain (rep.num) 
-- model intercepts $\alpha_g$'s (b0) 
+- model intercepts $\alpha_g$'s (a0s) 
 - strain variances $\sigma^2_g$'s (sig2s)
 - Tweedie parameter $p_{g}$'s (ps)
 - dispersions $\phi_g$'s (phis2)
@@ -206,14 +212,14 @@ phis2 <- c(1.5, 1, 0.5, 0.1, 0.1)
 
 set.seed(1234)
 cpData <- getCPReadMatrix(vec.num.rep = rep.num, 
-                          beta0s = b0, 
+                          beta0s = a0s, 
                           sig2.strains = sig2s, 
                           ps = ps, 
                           phis = phis2)
 ```
 
 ## Versioning
-Date: 2016-08-05
+Date: 2016-08-15
 
 **Version: 1.0.0**
 

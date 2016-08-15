@@ -262,7 +262,7 @@ getCPReadMatrix <- function(vec.num.rep, alphas, sigma2s, ps, phis){
 #' @param Strains Strain labels for the samples.
 #' @param test TRUE or FALSE (default). Test the presence of heritability 
 #' through examining \eqn{\sigma_g^2 = 0}.
-#' @return A list with two members. The first is a \eqn{G \times 3}{G x 3} 
+#' @return A list with two objects. The first object is a \eqn{G \times 3}{G x 3} 
 #' matrix indicating the fitted parameters for each feature. The columns are 
 #' ordered by \eqn{\alpha_g, \sigma_g^2, \phi_g}. 
 #' Row names are feature names; the second member of the list  
