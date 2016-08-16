@@ -58,12 +58,12 @@ is $\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{\sigma^2_{g}}
 
 Compute VPC for all features using NBMM:
 ```{r, eval = FALSE}
-result.nb <- fitNBMM(CountMatrix = simData, Strains = strains, test = FALSE)
-vpc.nb <- computeNBVPC(para = result.nb[[1]])
+result.nb <- fit.NB(CountMatrix = simData, Strains = strains, test = FALSE)
+vpc.nb <- computeVPC.NB(para = result.nb[[1]])
 ```
-The function *fitNBMM( )* returns a list with two objects. The first object is a $G \times 3$ matrix indicating the fitted parameters for each feature, where $G$ is the total number of features/genes. The columns are ordered by the fitted parameters $\alpha_{g}, \sigma^{2}_{g}, \phi_{g}$. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).
+The function *fit.NB( )* returns a list with two objects. The first object is a $G \times 3$ matrix indicating the fitted parameters for each feature, where $G$ is the total number of features/genes. The columns are ordered by the fitted parameters $\alpha_{g}, \sigma^{2}_{g}, \phi_{g}$. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).
 
-The function *computeNBVPC( )* takes in the list of NBMM parameters and outputs the corresponding VPC values. 
+The function *computeVPC.NB( )* takes in the list of NBMM parameters and outputs the corresponding VPC values. 
 
 ### CPMM 
 For a CP random variable $Y_{gsr}$ with mean $\mu_{gs}$, its variance can be expressed as $\phi_{g}\mu_{gs}^{p_{g}}$, for some tweedie parameter $1<p_{g}<2$ and dispersion parameter $\phi_{g}$ for feature/gene $g$ [^2]. Under the CPMM, with a $\log$-link, the regression on the mean has the same form as the NBMM:
@@ -73,12 +73,12 @@ The corresponding VPC is $\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 +  \p
 
 Compute VPC for all features using CPMM:
 ```{r, eval = FALSE}
-result.cp <- fitCPMM(CountMatrix = simData, Strains = strains, test = FALSE, optimizer = "nlminb")
-vpc.cp <- computeCPVPC(para = result.cp[[1]])
+result.cp <- fit.CP(CountMatrix = simData, Strains = strains, test = FALSE, optimizer = "nlminb")
+vpc.cp <- computeVPC.CP(para = result.cp[[1]])
 ```
-Similar to *fitNBMM( )*, the function *fitCPMM( )* returns a list of two objects. The first object consists the fitted parameters $\alpha_{g}, \sigma^{2}_{g}, p_{g}, \phi_{g}$. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).
+Similar to *fit.NB( )*, the function *fit.CP( )* returns a list of two objects. The first object consists the fitted parameters $\alpha_{g}, \sigma^{2}_{g}, p_{g}, \phi_{g}$. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).
 
-The function *computeCPVPC( )* takes in the list of CPMM parameters and outputs the corresponding VPC values. 
+The function *computeVPC.CP( )* takes in the list of CPMM parameters and outputs the corresponding VPC values. 
 
 [^2]: Tweedie, M. C. K. (1981). *An index which distinguishes between some important exponential families*. Statistics: applications and new directions, 579–604.
 
@@ -100,14 +100,14 @@ cds <- estimateDispersions(object = cds, fitType = "local")
 vsd <- varianceStabilizingTransformation(cds, fitType = "local")
 simData.vst <- assay(x = vsd)
 
-vpc.vst <- fitandcompute_lmer_VPC(CountMatrix = simData.vst,
+vpc.vst <- fitComputeVPC.lmer(CountMatrix = simData.vst,
                                   Strains = strains, 
                                   PriorWeight = NULL,
                                   test = FALSE,
                                   VPCname = "VST")[[1]]
 ```
 
-The function *fitandcompute_lmer_VPC* fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package **lme4** [^4]. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.    
+The function *fitComputeVPC.lmer* fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package **lme4** [^4]. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.    
 
 [^3]: Love MI, Huber W and Anders S (2014). *Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2*. Genome Biology, 15, pp. 550.
 
@@ -126,7 +126,7 @@ voomed.librarySize <- voom(counts = simData,
 simData.voom <- voomed.librarySize$E
 weights.voom <- voomed.librarySize$weights
 
-vpc.voom <- fitandcompute_lmer_VPC(CountMatrix = simData.voom,
+vpc.voom <- fitComputeVPC.lmer(CountMatrix = simData.voom,
                                    Strains = strains,
                                    PriorWeights = weights.voom,
                                    test = FALSE,
@@ -156,7 +156,7 @@ The first three methods: NB, CP, and Voom present relatively consistent results.
 
 
 ## Hypothesis testing
-As illustrated in the examples above, each of the four methods above also allows hypothesis testing for presence of heritability, simply by setting Test = TRUE in the functions *fitNBMM( )*, *fitCPMM( )*, and *fitandcompute_lmer_VPC( )* for NBMM, CPMM, and LMM respectively. 
+As illustrated in the examples above, each of the four methods above also allows hypothesis testing for presence of heritability, simply by setting Test = TRUE in the functions *fit.NB( )*, *fit.CP( )*, and *fitComputeVPC.lmer( )* for NBMM, CPMM, and LMM respectively. 
 
 ## Confidence intervals
 The VPC confidence intervals (CIs) can be generated using a parametric bootstrap. When 
@@ -177,7 +177,7 @@ The *getBootCI( )* function computes CIs based on parametric bootstrap for one o
 
 ## Simulate synthetic datasets
 Synthetic sequencing data with biological replicates can be simulated using 
-functions *getNBReadMatrix( )* or *getCPReadMatrix( )*.
+functions *getReadMatrix.NB( )* or *getReadMatrix.CP( )*.
 
 To siumulate counts under NBMM, first need to provide the essential parameters: 
 
@@ -192,7 +192,7 @@ sig2s <- c(10, 0.2, 0.1, 0.03, 0.01)
 phis1 <- c(0.5, 1, 0.05, 0.01, 0.1)
  
 set.seed(1234)
-nbData <- getNBReadMatrix(vec.num.rep = rep.num, 
+nbData <- getReadMatrix.NB(vec.num.rep = rep.num, 
                           beta0s = a0s, 
                           sig2.strains = sig2s, 
                           phis = phis1)
@@ -211,7 +211,7 @@ ps <- rep(1.5, 5)
 phis2 <- c(1.5, 1, 0.5, 0.1, 0.1)
 
 set.seed(1234)
-cpData <- getCPReadMatrix(vec.num.rep = rep.num, 
+cpData <- getReadMatrix.CP(vec.num.rep = rep.num, 
                           beta0s = a0s, 
                           sig2.strains = sig2s, 
                           ps = ps, 

@@ -149,20 +149,20 @@ library(&quot;heritseq&quot;)</code></pre>
 <p>Under NBMM, an observed number of reads aligned to feature/gene <span class="math">\(g\)</span>, <span class="math">\(Y_{gsr}\)</span>, follows a negative binomial distribution with mean <span class="math">\(\mu_{gs}\)</span> and variance <span class="math">\(\mu_{gs}+\phi_{g} \mu_{gs}^2\)</span>, where <span class="math">\(\phi_{g}\)</span> is the dispersion parameter for feature/gene <span class="math">\(g\)</span>, shared across strains. The generalized linear model uses a <span class="math">\(\log\)</span>-link: <span class="math">\(\log(\mu_{gs}) = \alpha_{g}+ b_{gs}, \;\;b_{gs}\sim N(0, \sigma^{2}_{g}).\)</span></p>
 <p>The corresponding heritability score, aka Variance Partition Coefficient (VPC), is <span class="math">\(\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{\sigma^2_{g}} + e^{-\alpha_g-\sigma^2_{g}/2} }.\)</span></p>
 <p>Compute VPC for all features using NBMM:</p>
-<pre class="r"><code>result.nb &lt;- fitNBMM(CountMatrix = simData, Strains = strains, test = FALSE)
-vpc.nb &lt;- computeNBVPC(para = result.nb[[1]])</code></pre>
-<p>The function <em>fitNBMM( )</em> returns a list with two objects. The first object is a <span class="math">\(G \times 3\)</span> matrix indicating the fitted parameters for each feature, where <span class="math">\(G\)</span> is the total number of features/genes. The columns are ordered by the fitted parameters <span class="math">\(\alpha_{g}, \sigma^{2}_{g}, \phi_{g}\)</span>. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).</p>
-<p>The function <em>computeNBVPC( )</em> takes in the list of NBMM parameters and outputs the corresponding VPC values.</p>
+<pre class="r"><code>result.nb &lt;- fit.NB(CountMatrix = simData, Strains = strains, test = FALSE)
+vpc.nb &lt;- computeVPC.NB(para = result.nb[[1]])</code></pre>
+<p>The function <em>fit.NB( )</em> returns a list with two objects. The first object is a <span class="math">\(G \times 3\)</span> matrix indicating the fitted parameters for each feature, where <span class="math">\(G\)</span> is the total number of features/genes. The columns are ordered by the fitted parameters <span class="math">\(\alpha_{g}, \sigma^{2}_{g}, \phi_{g}\)</span>. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).</p>
+<p>The function <em>computeVPC.NB( )</em> takes in the list of NBMM parameters and outputs the corresponding VPC values.</p>
 </div>
 <div id="cpmm" class="section level3">
 <h3>CPMM</h3>
 <p>For a CP random variable <span class="math">\(Y_{gsr}\)</span> with mean <span class="math">\(\mu_{gs}\)</span>, its variance can be expressed as <span class="math">\(\phi_{g}\mu_{gs}^{p_{g}}\)</span>, for some tweedie parameter <span class="math">\(1&lt;p_{g}&lt;2\)</span> and dispersion parameter <span class="math">\(\phi_{g}\)</span> for feature/gene <span class="math">\(g\)</span> <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>. Under the CPMM, with a <span class="math">\(\log\)</span>-link, the regression on the mean has the same form as the NBMM: <span class="math">\(\log(\mu_{gs}) = \alpha_{g}+ b_{gs}, \;\;b_{gs}\sim N(0, \sigma^{2}_{g}).\)</span></p>
 <p>The corresponding VPC is <span class="math">\(\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{(p_{g}-2)\alpha_{g}+(p_{g}^2/2-1)\sigma^2_{g}}}.\)</span></p>
 <p>Compute VPC for all features using CPMM:</p>
-<pre class="r"><code>result.cp &lt;- fitCPMM(CountMatrix = simData, Strains = strains, test = FALSE, optimizer = &quot;nlminb&quot;)
-vpc.cp &lt;- computeCPVPC(para = result.cp[[1]])</code></pre>
-<p>Similar to <em>fitNBMM( )</em>, the function <em>fitCPMM( )</em> returns a list of two objects. The first object consists the fitted parameters <span class="math">\(\alpha_{g}, \sigma^{2}_{g}, p_{g}, \phi_{g}\)</span>. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).</p>
-<p>The function <em>computeCPVPC( )</em> takes in the list of CPMM parameters and outputs the corresponding VPC values.</p>
+<pre class="r"><code>result.cp &lt;- fit.CP(CountMatrix = simData, Strains = strains, test = FALSE, optimizer = &quot;nlminb&quot;)
+vpc.cp &lt;- computeVPC.CP(para = result.cp[[1]])</code></pre>
+<p>Similar to <em>fit.NB( )</em>, the function <em>fit.CP( )</em> returns a list of two objects. The first object consists the fitted parameters <span class="math">\(\alpha_{g}, \sigma^{2}_{g}, p_{g}, \phi_{g}\)</span>. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).</p>
+<p>The function <em>computeVPC.CP( )</em> takes in the list of CPMM parameters and outputs the corresponding VPC values.</p>
 </div>
 <div id="vst" class="section level3">
 <h3>VST</h3>
@@ -179,12 +179,12 @@ cds &lt;- estimateDispersions(object = cds, fitType = &quot;local&quot;)
 vsd &lt;- varianceStabilizingTransformation(cds, fitType = &quot;local&quot;)
 simData.vst &lt;- assay(x = vsd)
 
-vpc.vst &lt;- fitandcompute_lmer_VPC(CountMatrix = simData.vst,
+vpc.vst &lt;- fitComputeVPC.lmer(CountMatrix = simData.vst,
                                   Strains = strains, 
                                   PriorWeight = NULL,
                                   test = FALSE,
                                   VPCname = &quot;VST&quot;)[[1]]</code></pre>
-<p>The function <em>fitandcompute_lmer_VPC</em> fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package <strong>lme4</strong> <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.</p>
+<p>The function <em>fitComputeVPC.lmer</em> fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package <strong>lme4</strong> <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.</p>
 </div>
 <div id="voom" class="section level3">
 <h3>Voom</h3>
@@ -197,7 +197,7 @@ voomed.librarySize &lt;- voom(counts = simData,
 simData.voom &lt;- voomed.librarySize$E
 weights.voom &lt;- voomed.librarySize$weights
 
-vpc.voom &lt;- fitandcompute_lmer_VPC(CountMatrix = simData.voom,
+vpc.voom &lt;- fitComputeVPC.lmer(CountMatrix = simData.voom,
                                    Strains = strains,
                                    PriorWeights = weights.voom,
                                    test = FALSE,
@@ -218,7 +218,7 @@ pairs.panels(x = h2, ellipses = FALSE, main = &quot;Compare VPC&quot;)</code></p
 </div>
 <div id="hypothesis-testing" class="section level2">
 <h2>Hypothesis testing</h2>
-<p>As illustrated in the examples above, each of the four methods above also allows hypothesis testing for presence of heritability, simply by setting Test = TRUE in the functions <em>fitNBMM( )</em>, <em>fitCPMM( )</em>, and <em>fitandcompute_lmer_VPC( )</em> for NBMM, CPMM, and LMM respectively.</p>
+<p>As illustrated in the examples above, each of the four methods above also allows hypothesis testing for presence of heritability, simply by setting Test = TRUE in the functions <em>fit.NB( )</em>, <em>fit.CP( )</em>, and <em>fitComputeVPC.lmer( )</em> for NBMM, CPMM, and LMM respectively.</p>
 </div>
 <div id="confidence-intervals" class="section level2">
 <h2>Confidence intervals</h2>
@@ -235,7 +235,7 @@ pairs.panels(x = h2, ellipses = FALSE, main = &quot;Compare VPC&quot;)</code></p
 </div>
 <div id="simulate-synthetic-datasets" class="section level2">
 <h2>Simulate synthetic datasets</h2>
-<p>Synthetic sequencing data with biological replicates can be simulated using functions <em>getNBReadMatrix( )</em> or <em>getCPReadMatrix( )</em>.</p>
+<p>Synthetic sequencing data with biological replicates can be simulated using functions <em>getReadMatrix.NB( )</em> or <em>getReadMatrix.CP( )</em>.</p>
 <p>To siumulate counts under NBMM, first need to provide the essential parameters:</p>
 <ul>
 <li>number of biological replicates for each strain (rep.num)</li>
@@ -249,7 +249,7 @@ sig2s &lt;- c(10, 0.2, 0.1, 0.03, 0.01)
 phis1 &lt;- c(0.5, 1, 0.05, 0.01, 0.1)
  
 set.seed(1234)
-nbData &lt;- getNBReadMatrix(vec.num.rep = rep.num, 
+nbData &lt;- getReadMatrix.NB(vec.num.rep = rep.num, 
                           beta0s = a0s, 
                           sig2.strains = sig2s, 
                           phis = phis1)</code></pre>
@@ -265,7 +265,7 @@ nbData &lt;- getNBReadMatrix(vec.num.rep = rep.num,
 phis2 &lt;- c(1.5, 1, 0.5, 0.1, 0.1)
 
 set.seed(1234)
-cpData &lt;- getCPReadMatrix(vec.num.rep = rep.num, 
+cpData &lt;- getReadMatrix.CP(vec.num.rep = rep.num, 
                           beta0s = a0s, 
                           sig2.strains = sig2s, 
                           ps = ps, 

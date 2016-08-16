@@ -118,9 +118,9 @@ getNBReads <- function(vec.num.rep, alpha_g, sigma2_g, phi_g){
 #' 
 #' set.seed(1234)
 #' ## Generate reads:
-#' nbData <- getNBReadMatrix(rep.num, a0s, sig2s, phis)
+#' nbData <- getReadMatrix.NB(rep.num, a0s, sig2s, phis)
 #' @export
-getNBReadMatrix <- function(vec.num.rep, alphas, sigma2s, phis){
+getReadMatrix.NB <- function(vec.num.rep, alphas, sigma2s, phis){
 
   num.probes <- length(alphas)
   CountMatrix <- lapply(1:num.probes, function(x){
@@ -226,7 +226,7 @@ getCPReads <- function(vec.num.rep, alpha_g, sigma2_g, p_g, phi_g){
 #' 
 #' set.seed(1234)
 #' ## Generate reads:
-#' cpData <- getCPReadMatrix(rep.num, a0s, sig2s, ps, phis)
+#' cpData <- getReadMatrix.CP(rep.num, a0s, sig2s, ps, phis)
 #' ## Generate strain names:
 #' str <- sapply(1:length(rep.num), function(x){
 #'   str.x <- paste0("S", x)
@@ -234,7 +234,7 @@ getCPReads <- function(vec.num.rep, alpha_g, sigma2_g, p_g, phi_g){
 #' })
 #' str <- do.call(c, str)
 #' @export
-getCPReadMatrix <- function(vec.num.rep, alphas, sigma2s, ps, phis){
+getReadMatrix.CP <- function(vec.num.rep, alphas, sigma2s, ps, phis){
 
   num.probes <- length(alphas)
   CountMatrix <- lapply(1:num.probes, function(x){
@@ -254,7 +254,7 @@ getCPReadMatrix <- function(vec.num.rep, alphas, sigma2s, ps, phis){
 #' Fit negative binomial mixed models (NBMM) for one or more features.
 #' 
 #' Fit NBMM for one or more features and output the fit parameters. 
-#' It is used before the function computeNBVPC(). This function also allows 
+#' It is used before the function computeVPC.NB(). This function also allows 
 #' to test the presence of heritability via random effect variance of the model.
 #' 
 #' @param CountMatrix Sequencing count matrix for a list of features. Each row 
@@ -272,9 +272,9 @@ getCPReadMatrix <- function(vec.num.rep, alphas, sigma2s, ps, phis){
 #' ## Compute vpc for each feature under NBMM. This will take a while on the
 #' ##  entire dataset. For the purpose of illustration, here we only fit on 
 #' ##  the first 2 features.
-#' result.nb <- fitNBMM(simData[1:2, ], strains)
+#' result.nb <- fit.NB(simData[1:2, ], strains)
 #' @export
-fitNBMM <- function(CountMatrix, Strains, test = FALSE){
+fit.NB <- function(CountMatrix, Strains, test = FALSE){
   if(is.null(dim(CountMatrix))){
       print('Fitting a single feature.')
       CountMatrix <- matrix(CountMatrix, nrow = 1)
@@ -394,7 +394,7 @@ compute1NBVPC <- function(alpha_g, sigma2_g, phi_g){
 #' for one or more features.
 #' 
 #' Calculate the NB VPC for one or more features following the model fitting 
-#' function fitNBMM().
+#' function fit.NB().
 #' 
 #' @param para A \eqn{G \times 3}{G x 3} matrix of negative binomial fit 
 #' parameters for \eqn{G} features, \eqn{G\geq 1}. The column order is 
@@ -405,7 +405,7 @@ compute1NBVPC <- function(alpha_g, sigma2_g, phi_g){
 #' is "NB-fit"; row names are the feature names.
 #' @examples
 #' ## Compute VPC for each feature under negative binomial mixed model.
-#' vpc.nb <- computeNBVPC(para_nb)
+#' vpc.nb <- computeVPC.NB(para_nb)
 #' 
 #' ## Visulize the distribution of the VPC's. 
 #' hist(vpc.nb, breaks = 50, col = "cyan")
@@ -416,7 +416,7 @@ compute1NBVPC <- function(alpha_g, sigma2_g, phi_g){
 #' abline(h = 0.9, lty = 2, col = "red")
 #' text(50, 0.92, "h2 = 0.9", col = "red")
 #' @export
-computeNBVPC <- function(para){
+computeVPC.NB <- function(para){
 
   if(is.null(dim(para))){
     vpcs <- compute1NBVPC(para[1], para[2], para[3])
@@ -444,7 +444,7 @@ computeNBVPC <- function(para){
 #' Fit compound Poisson mixed effect models (CPMM) for one or more features.
 #' 
 #' Fit a CPMM for one or more features and output the fit parameters. 
-#' It is used before the function computeCPVPC(). This function also allows 
+#' It is used before the function computeVPC.CP(). This function also allows 
 #' to test the presence of heritability via random effect variance of the model.
 #' 
 #' @param CountMatrix Sequencing count matrix for one or more features. Each 
@@ -469,14 +469,14 @@ computeNBVPC <- function(para){
 #' ## Fit CPMM for the first two features and test the presence of 
 #' ## heritability. For the purpose of illustration, here we only fit on 
 #' ## the first 2 features.
-#' result.cp <- fitCPMM(simData[1:2, ], strains, test = TRUE)
+#' result.cp <- fit.CP(simData[1:2, ], strains, test = TRUE)
 #' ## Extract parameters
 #' para.cp <- result.cp[[1]]
 #' ## Extract p-values
 #' pval.cp <- result.cp[[2]]
 #' }
 #' @export
-fitCPMM <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
+fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   # Fit a compound Poisson mixed effect model for a list of probes/genes and 
   #   output the fit parameters.
   #
@@ -616,7 +616,7 @@ compute1CPVPC <- function(alpha_g, sigma2_g, p_g, phi_g){
 #' for one or more features.
 #' 
 #' Calculate the CP VPC for one or more features following the model fitting 
-#' function fitCPMM().
+#' function fit.CP().
 #' 
 #' @param para A \eqn{G \times 4}{G x 4} matrix of CP fit parameters for 
 #' \eqn{G} features, \eqn{G\geq 1}. The column order is intercept 
@@ -628,7 +628,7 @@ compute1CPVPC <- function(alpha_g, sigma2_g, p_g, phi_g){
 #'   
 #' @examples
 #' ## Compute VPC for each feature under compound Poisson mixed models. 
-#' vpc.cp <- computeCPVPC(para_cp) 
+#' vpc.cp <- computeVPC.CP(para_cp) 
 #' 
 #' ## Visulize the distribution of the vpcs. 
 #' hist(vpc.cp, breaks = 50, col = "cyan")
@@ -638,7 +638,7 @@ compute1CPVPC <- function(alpha_g, sigma2_g, p_g, phi_g){
 #' abline(h = 0.9, lty = 2, col = "red")
 #' text(50, 0.92, "h2 = 0.9", col = "red")
 #' @export
-computeCPVPC <- function(para){
+computeVPC.CP <- function(para){
 
   if(is.null(dim(para))){
     vpcs <- compute1CPVPC(para[1], para[2], para[3], para[4])
@@ -723,7 +723,7 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL, test
 #' 
 #' ## Provide normalized data and include hypothesis testing on presence of
 #' ## heritability:
-#' result.vst <- fitandcompute_lmer_VPC(simData_vst, strains, test = TRUE)
+#' result.vst <- fitComputeVPC.lmer(simData_vst, strains, test = TRUE)
 #' ## Extract parameters
 #' vpc.vst <- result.vst[[1]]
 #' ## Extract p-values
@@ -732,7 +732,7 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL, test
 #' ## Visulize the distribution of p-values.
 #' hist(pval.vst, breaks = 30, col = "cyan")
 #' @export
-fitandcompute_lmer_VPC <- function(CountMatrix, Strains, PriorWeights = NULL, 
+fitComputeVPC.lmer <- function(CountMatrix, Strains, PriorWeights = NULL, 
                               test = FALSE, VPCname = "LMM"){
 
   VPC <- pbapply::pbsapply(1:nrow(CountMatrix), function(x){
@@ -816,16 +816,16 @@ getBootCI = function(CountMatrix, Strains, which.features, num.boot,
   
   if (method=="NB-fit"){
     print("Getting initial point estimates using the NB-fit method")
-    fit = fitNBMM(CountMatrix[which.features,], Strains)
+    fit = fit.NB(CountMatrix[which.features,], Strains)
     
     for (i in 1:length(which.features)){
       print(paste("Bootstraping feature",i))
-      boot.data = getNBReadMatrix(vec.num.rep, 
+      boot.data = getReadMatrix.NB(vec.num.rep, 
                                   rep(fit$paras[i,1],num.boot), 
                                   rep(fit$paras[i,2],num.boot),
                                   rep(fit$paras[i,3],num.boot))
-      fit.i = fitNBMM(boot.data, Strains)
-      all.vpcs[i,] = computeNBVPC(fit.i$paras)
+      fit.i = fit.NB(boot.data, Strains)
+      all.vpcs[i,] = computeVPC.NB(fit.i$paras)
     }
     
     intervals = cbind( apply(all.vpcs, 1, quantile, probs = alpha/2),
@@ -839,17 +839,17 @@ getBootCI = function(CountMatrix, Strains, which.features, num.boot,
   
   if (method=="CP-fit"){
     print("Getting initial point estimates using the CP-fit method")
-    fit = fitCPMM(CountMatrix[which.features,], Strains, optimizer = optimizer)
+    fit = fit.CP(CountMatrix[which.features,], Strains, optimizer = optimizer)
     
     for (i in 1:length(which.features)){
       print(paste("Bootstraping feature",i))
-      boot.data = getCPReadMatrix(vec.num.rep, 
+      boot.data = getReadMatrix.CP(vec.num.rep, 
                                   rep(fit$paras[i,1],num.boot), 
                                   rep(fit$paras[i,2],num.boot),
                                   rep(fit$paras[i,3],num.boot),
                                   rep(fit$paras[i,4],num.boot))
-      fit.i = fitCPMM(boot.data, Strains, optimizer = optimizer)
-      all.vpcs[i,] = computeCPVPC(fit.i$paras)
+      fit.i = fit.CP(boot.data, Strains, optimizer = optimizer)
+      all.vpcs[i,] = computeVPC.CP(fit.i$paras)
     }
     
     intervals = cbind( apply(all.vpcs, 1, quantile, probs = alpha/2),
@@ -863,11 +863,11 @@ getBootCI = function(CountMatrix, Strains, which.features, num.boot,
   
   if (method=="VST"){
     print("Getting initial point estimates using the VST method")
-    fit = fitNBMM(CountMatrix[which.features,], Strains)
+    fit = fit.NB(CountMatrix[which.features,], Strains)
     
     for (i in 1:length(which.features)){
       print(paste("Bootstraping feature",i))
-      boot.data = getNBReadMatrix(vec.num.rep, 
+      boot.data = getReadMatrix.NB(vec.num.rep, 
                                   rep(fit$paras[i,1],num.boot), 
                                   rep(fit$paras[i,2],num.boot),
                                   rep(fit$paras[i,3],num.boot))
@@ -889,7 +889,7 @@ getBootCI = function(CountMatrix, Strains, which.features, num.boot,
       vsd <- DESeq2::varianceStabilizingTransformation(cds, fitType = "local")
       vsd <- SummarizedExperiment::assay(vsd)
 
-      all.vpcs[i,] = fitandcompute_lmer_VPC(vsd, Strains)$vpcs
+      all.vpcs[i,] = fitComputeVPC.lmer(vsd, Strains)$vpcs
     }
     
     intervals = cbind( apply(all.vpcs, 1, quantile, probs = alpha/2),
