@@ -518,7 +518,7 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     })
     
     if (class(fit) != "try-error"){
-      as <- fix$fixef
+      as <- fit$fixef
       sigma_a2 <- as.numeric(cplm::VarCorr(fit)$strain)
       p <- fit$p
       phi <- fit$phi
