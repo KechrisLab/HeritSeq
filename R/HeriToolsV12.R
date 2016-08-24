@@ -531,7 +531,7 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     
     ### Fitting the reduced model for testing significance of the random effect ###
     if (test){
-      detach("package:cplm", unload=TRUE)
+      detach("package:cplm")
       suppressMessages(suppressWarnings(
         requireNamespace("cplm",depends = TRUE, quietly = TRUE)))
       attachNamespace("cplm")
@@ -543,7 +543,7 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
       })
       
       if (class(fit.red) != "try-error" & class(fit) != "try-error"){
-        test.stat <- 2*logLik(fit)+AIC(fit.red)-2
+        test.stat <- 2*cplm::logLik(fit)+cplm::AIC(fit.red)-2
         
         if (test.stat<1e-6) {test.stat <- 0}
         pval <- 0.5*pchisq(test.stat, df = 1, lower.tail = FALSE) + 
@@ -556,7 +556,7 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
       para <- c(para, pval)
     }
     
-    detach("package:cplm", unload=TRUE)
+    detach("package:cplm")
     suppressMessages(suppressWarnings(
       requireNamespace("cplm", depends = TRUE, quietly = TRUE)))
 
