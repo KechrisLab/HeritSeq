@@ -235,6 +235,8 @@ as following:
 Compute CI based on 100 boostrap samples for the first 3 features using the CP
 method:
 ```{r, eval = FALSE}
+source(fit.CP_alt.R)
+source(getBootCI_alt.R)
 boot.vst <- getBootCI_alt(CountMatrix = simData, 
                       Strains = strains, 
                       which.features = 1:3, 

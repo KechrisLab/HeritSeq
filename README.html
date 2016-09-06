@@ -264,7 +264,9 @@ pairs.panels(x = h2, ellipses = FALSE, main = &quot;Compare VPC&quot;)</code></p
 <p>The <em>getBootCI( )</em> function computes CIs based on parametric bootstrap for one or more features. It allows three models: NB, CP, and VST. Although method = NB is the default, it is the most time-consuming. When choosing method = VST, the input data <em>CountMatrix</em> should still be the un-transformed data. The argument <em>which.features</em> specifies the feature indices for which the CIs should be computed for; <em>alpha</em> defines the significance level; <em>optimizer</em> is only used for method = CP.</p>
 <p>Similar to the function <em>fit.CP( )</em>, when method = “CP”, the function <em>getBootCI( )</em> may produce incorrect result due to potential memory leakage in the <strong>cplm</strong> package. Although this happens rarely, we addvice users to be caution. To avoid this issue, user may source an alternative functions <em>fit.CP_alt( )</em> and <em>getBootCI_alt( )</em> from the GitHub page and compute the CIs as following:</p>
 <p>Compute CI based on 100 boostrap samples for the first 3 features using the CP method:</p>
-<pre class="r"><code>boot.vst &lt;- getBootCI_alt(CountMatrix = simData, 
+<pre class="r"><code>source(fit.CP_alt.R)
+source(getBootCI_alt.R)
+boot.vst &lt;- getBootCI_alt(CountMatrix = simData, 
                       Strains = strains, 
                       which.features = 1:3, 
                       num.boot = 100, 
