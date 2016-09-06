@@ -53,7 +53,7 @@ library("HeritSeq")
 ```{r, echo = FALSE}
 setwd("~/Documents/heritseq/")
 load("data/heritseq_example.RData")
-source("R/HeriToolsV12.R")
+# source("R/HeriToolsV12.R")
 ```
 
 ## Estimate heritability scores
@@ -115,6 +115,15 @@ result.cp[[1]] <- pblapply(simData, 1, function(x){
 
   return(paras)
 })
+vpc.cp <- computeVPC.CP(para = result.cp[[1]])
+```
+
+Alternatively, users may download an alternative functions *fit.CP_alt( )* 
+directly from the GitHub Page and directly fit multiple features.
+
+```{r, eval = FALSE}
+source("fit.CP_alt.R")
+result.cp <- fit.CP_alt(CountMatrix = simData, Strains = strains, test = FALSE, optimizer = "nlminb")
 vpc.cp <- computeVPC.CP(para = result.cp[[1]])
 ```
 
@@ -219,7 +228,22 @@ The *getBootCI( )* function computes CIs based on parametric bootstrap for one o
 Similar to the function *fit.CP( )*, when method = "CP", the function 
 *getBootCI( )* may produce incorrect result due to potential memory leakage in 
 the **cplm** package. Although this happens rarely, we addvice users to be 
-caution.
+caution. To avoid this issue, user may source an alternative functions 
+*fit.CP_alt( )* and *getBootCI_alt( )* from the GitHub page and compute the CIs
+as following: 
+
+Compute CI based on 100 boostrap samples for the first 3 features using the CP
+method:
+```{r, eval = FALSE}
+boot.vst <- getBootCI_alt(CountMatrix = simData, 
+                      Strains = strains, 
+                      which.features = 1:3, 
+                      num.boot = 100, 
+                      method = "CP",
+                      alpha=0.05, 
+                      optimizer = "nlminb")
+```
+
 
 
 ## Simulate synthetic datasets

@@ -189,6 +189,10 @@ result.cp[[1]] &lt;- pblapply(simData, 1, function(x){
   return(paras)
 })
 vpc.cp &lt;- computeVPC.CP(para = result.cp[[1]])</code></pre>
+<p>Alternatively, users may download an alternative functions <em>fit.CP_alt( )</em> directly from the GitHub Page and directly fit multiple features.</p>
+<pre class="r"><code>source(&quot;fit.CP_alt.R&quot;)
+result.cp &lt;- fit.CP_alt(CountMatrix = simData, Strains = strains, test = FALSE, optimizer = &quot;nlminb&quot;)
+vpc.cp &lt;- computeVPC.CP(para = result.cp[[1]])</code></pre>
 </div>
 <div id="vst" class="section level3">
 <h3>VST</h3>
@@ -210,7 +214,7 @@ vpc.vst &lt;- fitComputeVPC.lmer(CountMatrix = simData.vst,
                               PriorWeight = NULL,
                               test = FALSE,
                               VPCname = &quot;VST&quot;)[[1]]</code></pre>
-<p>The function <em>fitComputeVPC.lmer</em> fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of the list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package <strong>lme4</strong> <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.</p>
+<p>The function <em>fitComputeVPC.lmer( )</em> fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of the list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package <strong>lme4</strong> <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.</p>
 </div>
 <div id="voom" class="section level3">
 <h3>Voom</h3>
@@ -258,7 +262,15 @@ pairs.panels(x = h2, ellipses = FALSE, main = &quot;Compare VPC&quot;)</code></p
                       alpha=0.05, 
                       optimizer = &quot;nlminb&quot;)</code></pre>
 <p>The <em>getBootCI( )</em> function computes CIs based on parametric bootstrap for one or more features. It allows three models: NB, CP, and VST. Although method = NB is the default, it is the most time-consuming. When choosing method = VST, the input data <em>CountMatrix</em> should still be the un-transformed data. The argument <em>which.features</em> specifies the feature indices for which the CIs should be computed for; <em>alpha</em> defines the significance level; <em>optimizer</em> is only used for method = CP.</p>
-<p>Similar to the function <em>fit.CP( )</em>, when method = “CP”, the function <em>getBootCI( )</em> may produce incorrect result due to potential memory leakage in the <strong>cplm</strong> package. Although this happens rarely, we addvice users to be caution.</p>
+<p>Similar to the function <em>fit.CP( )</em>, when method = “CP”, the function <em>getBootCI( )</em> may produce incorrect result due to potential memory leakage in the <strong>cplm</strong> package. Although this happens rarely, we addvice users to be caution. To avoid this issue, user may source an alternative functions <em>fit.CP_alt( )</em> and <em>getBootCI_alt( )</em> from the GitHub page and compute the CIs as following:</p>
+<p>Compute CI based on 100 boostrap samples for the first 3 features using the CP method:</p>
+<pre class="r"><code>boot.vst &lt;- getBootCI_alt(CountMatrix = simData, 
+                      Strains = strains, 
+                      which.features = 1:3, 
+                      num.boot = 100, 
+                      method = &quot;CP&quot;,
+                      alpha=0.05, 
+                      optimizer = &quot;nlminb&quot;)</code></pre>
 </div>
 <div id="simulate-synthetic-datasets" class="section level2">
 <h2>Simulate synthetic datasets</h2>
