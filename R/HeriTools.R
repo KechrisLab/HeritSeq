@@ -740,6 +740,10 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL, test
 #' @export
 fitComputeVPC.lmer <- function(CountMatrix, Strains, PriorWeights = NULL, 
                                test = FALSE, VPCname = "LMM"){
+  if(is.null(dim(CountMatrix))){
+    print('Fitting a single feature.')
+    CountMatrix <- matrix(CountMatrix, nrow = 1)
+  }
   
   VPC <- pbapply::pbsapply(1:nrow(CountMatrix), function(x){
     vpc.x <- fitandcompute1lmerVPC(CountMatrix[x, ], Strains, 
@@ -789,6 +793,8 @@ fitComputeVPC.lmer <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' @param num.boot Number of bootstraps.
 #' @param method Which method should be used, "CP-fit", "NB-fit" (default), 
 #' or "VST". "VST" method bootstraps data under negative binomial mixed models.
+#' Infrequently, the "CP-fit" method might produce inaccurate CI due to the
+#' potential memory issue in the cplm pakcage.
 #' @param alpha A numerical value between 0 and 1, indicating the significance 
 #' level of the CI. The CI will be \eqn{100*(1-\alpha)}{100*(1-alpha)} 
 #' percent CI. Default value is 0.05.
@@ -798,10 +804,6 @@ fitComputeVPC.lmer <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' @return A list of two objects. The first object is a \eqn{k \times 2} 
 #' matrix containing the CI. The second object consists of a 
 #' \eqn{k \times}num.boot matrix of all bootsrapped VPC values.
-#' Similar to the function fit.CP( ), when method = "CP", the function 
-#' getBootCI( ) may produce incorrect result due to potential memory leakage 
-#' in the cplm package. Although this happens rarely, we addvice users to be 
-#' caution.
 #' 
 #' @examples
 #' ## Compute CI based on 100 bootstrap samples for the first feature 
