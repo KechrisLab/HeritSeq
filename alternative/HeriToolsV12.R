@@ -496,6 +496,7 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   #   member of the list consists of p-values for testing the hypothesis that 
   #   sigma2_g = 0.
   
+  
 
   if(is.null(dim(CountMatrix))){
       print('Fitting a single feature.')
@@ -531,7 +532,7 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     
     ### Fitting the reduced model for testing significance of the random effect ###
     if (test){
-      detach("package:cplm")
+      detach("package:cplm", unload = TRUE)
       suppressMessages(suppressWarnings(
         requireNamespace("cplm",depends = TRUE, quietly = TRUE)))
       attachNamespace("cplm")
@@ -556,7 +557,7 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
       para <- c(para, pval)
     }
     
-    detach("package:cplm")
+    detach("package:cplm", unload = TRUE)
     suppressMessages(suppressWarnings(
       requireNamespace("cplm", depends = TRUE, quietly = TRUE)))
 
