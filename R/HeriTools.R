@@ -451,14 +451,6 @@ computeVPC.NB <- function(para){
 #' It is used before the function computeVPC.CP(). This function also allows 
 #' to test the presence of heritability via random effect variance of the model.
 #' 
-#' We advice users to be caution when applying the function fit.CP( ) 
-#' directly to multiple features. In rare cases, when fitting multiple 
-#' features, the random effect variance $\sigma^2_g$ may be falsely 
-#' estimated to be near zero. This is caused by a memory issue inside of 
-#' the cplm package. To guarantee correct estimators when fitting multiple 
-#' features, we suggest to add detach(HeritSeq, unload = TRUE) and 
-#' library(HeritSeq) before fitting the next feature.
-#' 
 #' @param CountMatrix Sequencing count matrix for one or more features. Each 
 #' row is for one feature, and the columns are for samples. 
 #' @param Strains Strain labels for the samples. 
@@ -478,9 +470,9 @@ computeVPC.NB <- function(para){
 #' 
 #' @examples
 #' \donttest{
-#' ## Fit CPMM for the first feature and test the presence of 
+#' ## Fit CPMM for the first two features and test the presence of 
 #' ## heritability. 
-#' result.cp <- fit.CP(simData[1, ], strains, test = TRUE)
+#' result.cp <- fit.CP(simData[1:2, ], strains, test = TRUE)
 #' ## Extract parameters
 #' para.cp <- result.cp[[1]]
 #' ## Extract p-values
@@ -519,10 +511,10 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     dat_sub <- data.frame(expr = as.numeric(CountVector), strain = Strains)
     
     fit <- tryCatch({
-      fit1 <- cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
+      fit1 <- mycpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
                      optimizer = optimizer)
     }, error=function(err){
-      fit1 <- try({cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
+      fit1 <- try({mycpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
                           optimizer = optimizer)}) 
       return(fit1)
     })
@@ -793,8 +785,6 @@ fitComputeVPC.lmer <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' @param num.boot Number of bootstraps.
 #' @param method Which method should be used, "CP-fit", "NB-fit" (default), 
 #' or "VST". "VST" method bootstraps data under negative binomial mixed models.
-#' Infrequently, the "CP-fit" method might produce inaccurate CI due to the
-#' potential memory issue in the cplm pakcage.
 #' @param alpha A numerical value between 0 and 1, indicating the significance 
 #' level of the CI. The CI will be \eqn{100*(1-\alpha)}{100*(1-alpha)} 
 #' percent CI. Default value is 0.05.
