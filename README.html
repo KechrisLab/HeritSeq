@@ -140,16 +140,22 @@ $(document).ready(function () {
 <pre class="r"><code>install.packages(&quot;lme4&quot;, repos=&quot;http://cran.r-project.org&quot;)
 install.packages(&quot;cplm&quot;, repos=&quot;http://cran.r-project.org&quot;)
 install.packages(&quot;pbapply&quot;, repos=&quot;http://cran.r-project.org&quot;)
-install.packages(&quot;R2admb&quot;)
+install.packages(&quot;statmod&quot;, repos=&quot;http://cran.r-project.org&quot;)
+install.packages(&quot;MASS&quot;, repos=&quot;http://cran.r-project.org&quot;)
+install.packages(&quot;stats&quot;, repos=&quot;http://cran.r-project.org&quot;)
+install.packages(&quot;utils&quot;, repos=&quot;http://cran.r-project.org&quot;)
+
 install.packages(&quot;glmmADMB&quot;, 
                 repos=c(&quot;http://glmmadmb.r-forge.r-project.org/repos&quot;,
                         getOption(&quot;repos&quot;)),
                 type=&quot;source&quot;)
+
 source(&quot;https://bioconductor.org/biocLite.R&quot;)
-biocLite(&quot;DESeq2&quot;)</code></pre>
+biocLite(&quot;DESeq2&quot;)
+biocLite(&quot;SummarizedExperiment&quot;)</code></pre>
 <p>The installation of dependencies only needs to be done once, if at all.</p>
 <p>The package requires a <strong>R</strong> version &gt;=3.2.3.</p>
-<pre class="r"><code>install.packages(&quot;HeritSeq&quot;, repos = &quot;http://cran.rstudio.com&quot;)
+<pre class="r"><code>install.packages(&quot;HeritSeq&quot;, repos=&quot;http://cran.r-project.org&quot;)
 library(&quot;HeritSeq&quot;)</code></pre>
 </div>
 <div id="estimate-heritability-scores" class="section level2">
@@ -170,38 +176,18 @@ vpc.nb &lt;- computeVPC.NB(para = result.nb[[1]])</code></pre>
 <h3>CPMM</h3>
 <p>For a CP random variable <span class="math">\(Y_{gsr}\)</span> with mean <span class="math">\(\mu_{gs}\)</span>, its variance can be expressed as <span class="math">\(\phi_{g}\mu_{gs}^{p_{g}}\)</span>, for some tweedie parameter <span class="math">\(1&lt;p_{g}&lt;2\)</span> and dispersion parameter <span class="math">\(\phi_{g}\)</span> for feature/gene <span class="math">\(g\)</span> <a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>. Under the CPMM, with a <span class="math">\(\log\)</span>-link, the regression on the mean has the same form as the NBMM: <span class="math">\(\log(\mu_{gs}) = \alpha_{g}+ b_{gs}, \;\;b_{gs}\sim N(0, \sigma^{2}_{g}).\)</span></p>
 <p>The corresponding VPC is <span class="math">\(\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{(p_{g}-2)\alpha_{g}+(p_{g}^2/2-1)\sigma^2_{g}}}.\)</span></p>
-<p>Compute VPC for the first features using CPMM:</p>
-<pre class="r"><code>result.cp.1 &lt;- fit.CP(CountMatrix = simData[1, ], Strains = strains, test = FALSE,
+<p>Compute VPC for all features using CPMM:</p>
+<pre class="r"><code>result.cp &lt;- fit.CP(CountMatrix = simData, Strains = strains, test = FALSE,
                     optimizer = &quot;nlminb&quot;)
-vpc.cp.1 &lt;- computeVPC.CP(para = result.cp.1[[1]])</code></pre>
+vpc.cp &lt;- computeVPC.CP(para = result.cp[[1]])</code></pre>
 <p>Similar to <em>fit.NB( )</em>, the function <em>fit.CP( )</em> returns a list of two objects. The first object consists the fitted parameters <span class="math">\(\alpha_{g}, \sigma^{2}_{g}, p_{g}, \phi_{g}\)</span>. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default). The argument optimizer determines the optimization routine. Other possible choices are “L-BGFS-B” and “bobyqa”.</p>
 <p>The function <em>computeVPC.CP( )</em> takes in the list of CPMM parameters and outputs the corresponding VPC values.</p>
-<p>We advice users to be caution when applying the function <em>fit.CP( )</em> directly to multiple features. In rare cases, when fitting multiple features, the random effect variance <span class="math">\(\sigma^2_g\)</span> may be falsely estimated to be near zero. This is caused by a memory issue inside of the <strong>cplm</strong> package. To avoid this potential issue, we suggest to add <em>detach(HeritSeq, unload = TRUE)</em> and <em>library(HeritSeq)</em> before fitting the next feature as following.</p>
-<p>Compute VPC for all features of the simulated dataset using CPMM:</p>
-<pre class="r"><code>result.cp &lt;- vector(&quot;list&quot;, 2)
-result.cp[[1]] &lt;- pblapply(simData, 1, function(x){
-  result.x &lt;- fit.CP(CountMatrix = x, Strains = strains, test = FALSE, optimizer = &quot;nlminb&quot;)
-  paras &lt;- rbind(result.cp[[1]], result.x[[1]])
-
-  detach(HeritSeq, unload = TRUE)
-  suppressMessages(suppressWarnings(library(HeritSeq)))
-
-  return(paras)
-})
-vpc.cp &lt;- computeVPC.CP(para = result.cp[[1]])</code></pre>
-<p>Alternatively, users may download an alternative functions <em>fit.CP_alt( )</em> directly from the GitHub Page and directly fit multiple features.</p>
-<pre class="r"><code>source(&quot;fit.CP_alt.R&quot;)
-result.cp &lt;- fit.CP_alt(CountMatrix = simData, Strains = strains, test = FALSE, optimizer = &quot;nlminb&quot;)
-vpc.cp &lt;- computeVPC.CP(para = result.cp[[1]])</code></pre>
 </div>
 <div id="vst" class="section level3">
 <h3>VST</h3>
 <p>In order to use a linear mixed model (LMM), the sequence reads first need to be transformed to Gaussian-like data. The variance stablizing transformation (VST) was introduced in the package <strong>DESeq2</strong> <a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>. It is based on a negative binomial assumption of the original data.</p>
 <p>Transform <em>simData</em> using VST and fit features using LMM:</p>
-<pre class="r"><code>attachNamespace(&quot;DESeq2&quot;)
-attachNamespace(&quot;SummarizedExperiment&quot;)
-
-cds &lt;- DESeqDataSetFromMatrix(countData = round(simData), 
+<pre class="r"><code>cds &lt;- DESeqDataSetFromMatrix(countData = round(simData), 
                               colData = data.frame(strain = strains),
                               design = formula(~strain))
 cds &lt;- estimateSizeFactors(object = cds)
@@ -214,7 +200,7 @@ vpc.vst &lt;- fitComputeVPC.lmer(CountMatrix = simData.vst,
                               PriorWeight = NULL,
                               test = FALSE,
                               VPCname = &quot;VST&quot;)[[1]]</code></pre>
-<p>The function <em>fitComputeVPC.lmer( )</em> fits a linear mixed model for each feature and directly compute the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of the list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package <strong>lme4</strong> <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.</p>
+<p>The function <em>fitComputeVPC.lmer( )</em> fits a linear mixed model for each feature and directly computes the VPC scores. The output includes a list of VPC values and significance result for testing presence of heritability. If test = TRUE, the second object of the list are the p-values; otherwise, it is NULL (default). The argument PriorWeight is an optional input used in the lmer function in the package <strong>lme4</strong> <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>. Note that variance stablizating transformation does not output a prior weight, hence the argument PriorWeight is set to be NULL for VST.</p>
 </div>
 <div id="voom" class="section level3">
 <h3>Voom</h3>
@@ -252,7 +238,7 @@ pairs.panels(x = h2, ellipses = FALSE, main = &quot;Compare VPC&quot;)</code></p
 </div>
 <div id="confidence-intervals" class="section level2">
 <h2>Confidence intervals</h2>
-<p>The VPC confidence intervals (CIs) can be generated using a parametric bootstrap. When choosing the VST method, the bootstraped data are generated from negative binomal models followed by variance stablized transformation. Due to its less superior performance (detailed discussion can be found in Reference [1]), the Voom approach is excluded for the <em>getBootCI( )</em> function.</p>
+<p>The VPC confidence intervals (CIs) can be generated using a parametric bootstrap. When choosing the VST method, the bootstraped data are generated from negative binomal models followed by the variance stablized transformation. Due to its less superior performance (detailed discussion can be found in Reference [1]), the Voom approach is excluded for the <em>getBootCI( )</em> function.</p>
 <p>Compute CI based on 100 boostrap samples for the first 3 features:</p>
 <pre class="r"><code>boot.vst &lt;- getBootCI(CountMatrix = simData, 
                       Strains = strains, 
@@ -261,23 +247,12 @@ pairs.panels(x = h2, ellipses = FALSE, main = &quot;Compare VPC&quot;)</code></p
                       method = &quot;VST&quot;,
                       alpha=0.05, 
                       optimizer = &quot;nlminb&quot;)</code></pre>
-<p>The <em>getBootCI( )</em> function computes CIs based on parametric bootstrap for one or more features. It allows three models: NB, CP, and VST. Although method = NB is the default, it is the most time-consuming. When choosing method = VST, the input data <em>CountMatrix</em> should still be the un-transformed data. The argument <em>which.features</em> specifies the feature indices for which the CIs should be computed for; <em>alpha</em> defines the significance level; <em>optimizer</em> is only used for method = CP.</p>
-<p>Similar to the function <em>fit.CP( )</em>, when method = “CP”, the function <em>getBootCI( )</em> may produce incorrect result due to potential memory leakage in the <strong>cplm</strong> package. Although this happens rarely, we addvice users to be caution. To avoid this issue, user may source an alternative functions <em>fit.CP_alt( )</em> and <em>getBootCI_alt( )</em> from the GitHub page and compute the CIs as following:</p>
-<p>Compute CI based on 100 boostrap samples for the first 3 features using the CP method:</p>
-<pre class="r"><code>source(fit.CP_alt.R)
-source(getBootCI_alt.R)
-boot.vst &lt;- getBootCI_alt(CountMatrix = simData, 
-                      Strains = strains, 
-                      which.features = 1:3, 
-                      num.boot = 100, 
-                      method = &quot;CP&quot;,
-                      alpha=0.05, 
-                      optimizer = &quot;nlminb&quot;)</code></pre>
+<p>The <em>getBootCI( )</em> function computes CIs based on parametric bootstrap for one or more features. It allows three models: NB, CP, and VST. Although the NB method is defined as the default, it is the most time-consuming. When choosing the VST method, the input data <em>CountMatrix</em> should still be the un-transformed data. The argument <em>which.features</em> specifies the feature indices for which the CIs should be computed for; <em>alpha</em> defines the significance level; <em>optimizer</em> is only used for the CP method.</p>
 </div>
 <div id="simulate-synthetic-datasets" class="section level2">
 <h2>Simulate synthetic datasets</h2>
 <p>Synthetic sequencing data with biological replicates can be simulated using functions <em>getReadMatrix.NB( )</em> or <em>getReadMatrix.CP( )</em>.</p>
-<p>To siumulate counts under NBMM, first need to provide the essential parameters:</p>
+<p>To siumulate counts under NBMM, the parameters are:</p>
 <ul>
 <li>number of biological replicates for each strain (rep.num)</li>
 <li>model intercepts <span class="math">\(\alpha_g\)</span>’s (a0s)</li>
@@ -294,7 +269,7 @@ nbData &lt;- getReadMatrix.NB(vec.num.rep = rep.num,
                           beta0s = a0s, 
                           sig2.strains = sig2s, 
                           phis = phis1)</code></pre>
-<p>To simulate synthetic data under CPMM, the essential parameters are:</p>
+<p>To simulate synthetic data under CPMM, the parameters are:</p>
 <ul>
 <li>number of biological replicates for each strain (rep.num)</li>
 <li>model intercepts <span class="math">\(\alpha_g\)</span>’s (a0s)</li>
@@ -316,6 +291,10 @@ cpData &lt;- getReadMatrix.CP(vec.num.rep = rep.num,
 <h2>Versioning</h2>
 <p>Date: 2016-09-06</p>
 <p><strong>Version: 1.0.0</strong></p>
+</div>
+<div id="acknowledgements" class="section level2">
+<h2>Acknowledgements</h2>
+<p>We would like to thank Yanwei (Wayne) Zhang, the cplm package author, for helpful discussions regarding the compound Poisson regression fit in cplm and for providing a modified function before the new version of his package is released.</p>
 </div>
 <div id="authors" class="section level2">
 <h2>Authors</h2>
