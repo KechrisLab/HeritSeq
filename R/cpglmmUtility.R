@@ -1,6 +1,403 @@
+#####################################################
+# These functions are copied from the package 'cplm',
+# written by Yanwei (Wayne) Zhange.
+#####################################################
+
+
+
 #####cpglmm utility functions #####
 #install.packages("statmod")
 requireNamespace("statmod", quietly = TRUE)
+requireNamespace("Matrix", quietly = TRUE)
+requireNamespace("nloptr", quietly = TRUE)
+
+
+expandBasis <- function(basis, by, varying, bySetToZero = T){
+    #multiply X, Z with varying
+    #set up lists of design matrices if by-variable and/or allPen are given:
+    allPen <- eval(attr(basis, "call")$allPen, parent.frame())
+    X <- basis$X
+    Z <- basis$Z
+    
+    
+    xName <- safeDeparse(attr(basis, "call")$x)
+    if(!is.null(varying)){
+        xName <- paste(xName, "X", safeDeparse(attr(basis, "call")$varying), sep="")
+        X <- cbind(varying, X * varying)
+        Z <- Z * varying
+    }
+    
+    
+    if(!is.null(by)){
+        X.o <- X
+        Z.o <- Z
+        byName <- safeDeparse(attr(basis, "call")$by)
+        if(!allPen){
+            basis$X <- basis$Z <- vector(mode="list", nlevels(by))
+            for(i in 1:nlevels(by)){
+                if(bySetToZero){
+                    keep <- 1*(by == levels(by)[i])
+                } else keep <- rep(1, length(by))
+                #set X,Z partially to zero for each level of by-variable
+                if(NCOL(X.o)){
+                    basis$X[[i]] <- X.o * keep
+                    #naming scheme: x.fx.bylevel1.fx1, x.fx.bylevel1.fx2, ...,x.fx.bylevel2.fx1, or xXvarying.fx.bylevel1.fx1
+                    
+                    colnames(basis$X[[i]]) <- paste(xName,".",byName,levels(by)[i],
+                    paste(".fx",1:NCOL(basis$X[[i]]),sep=""), sep="")
+                }
+                basis$Z[[i]] <- Z.o * keep
+            }
+            #naming scheme: bylevel1, bylevel2, ...
+            names(basis$X) <- names(basis$Z) <- paste(byName, levels(by), sep="")
+        } else {
+            basis$X <- basis$Z <- vector(mode="list", 1)
+            by <- C(by[, drop=TRUE], contr.treatment) #make sure treatment contrasts are used, unused levels dropped
+            #basis$Z[[1]] <- Matrix(model.matrix(~ 0 + Z.o:by)) #TODO: can this be done without intermediate dense matrix?
+            basis$Z[[1]] <- model.matrix(~ 0 + Z.o:by) #FIXME: ?constructing directly as sparse breaks transposing Z in subAZ?
+            #cbind Z set partially to zero for each level of by-variable:
+            ## for(i in 1:nlevels(by[, drop=TRUE])) {
+            ##     if(bySetToZero){
+            ##         keep <- (by == levels(by[, drop=TRUE])[i])
+            ##     } else keep <- 1
+            ##     basis$Z[[1]] <- cBind(basis$Z[[1]], Z.o * keep)
+            ##     #basis$Z[[1]] <- Matrix(model.matrix(~ 0 + Z.o:by[, drop=TRUE]))
+            ## }
+            basis$X[[1]] <- X.o
+            if(NCOL(X.o)) colnames(basis$X[[1]]) <- paste(xName,".",byName,paste(".fx",1:NCOL(X),sep=""), sep="")
+            #naming scheme: u.x.by (also: name of duplicated by-variable in expandMf, subFcts)
+            names(basis$X) <- paste("u", xName, byName, sep=".")
+        }
+    } else {
+        if(NCOL(X)) colnames(X) <- paste(xName,paste(".fx",1:NCOL(X),sep=""), sep="")
+        basis$X <- list(X)
+        basis$Z <- list(Z)
+    }
+    
+    return(basis)
+}
+
+
+indsF <- function(m, fct, fctterm){
+    # add assign-like info to fctterm:
+    # which penalization/ranef groups and coefficients (fixed/random) belong to which function
+    # also include info on global intercept and by-level intercepts
+    ranefinds <- reinds(m@Gp)
+    
+    indIntercept <- ifelse("(Intercept)" %in% names(fixef(m)), 1, 0)
+    
+    for(i in 1:length(fctterm)){
+        if(length(fct[[i]]$Z) == 1){
+            
+            attr(fctterm[[i]], "indGrp") <- match(names(fct)[i], colnames(m@flist))
+            if(eval(attr(fct[[i]], "call")$allPen)) {
+                #add pen. group(s) with grouping factor u.x.by
+                indUGrp <- match(sub("f.", "u.", names(fct)[i]), colnames(m@flist))
+                attr(fctterm[[i]], "indGrp") <-  c(attr(fctterm[[i]], "indGrp"), which(attr(m@flist, "assign")==indUGrp))
+            }
+            attr(fctterm[[i]], "indPen") <- unlist(ranefinds[attr(fctterm[[i]], "indGrp")])
+            
+            if(!(eval(attr(fct[[i]], "call")$allPen)||ncol(fct[[i]]$X[[1]])==0)){
+                attr(fctterm[[i]], "indUnpen") <-  sapply(paste("^",colnames(fct[[i]]$X[[1]]),"$",sep=""),
+                grep, x=names(m@fixef))
+                names(attr(fctterm[[i]], "indUnpen")) <- colnames(fct[[i]]$X[[1]])
+            } else attr(fctterm[[i]], "indUnpen") <- 0
+            
+            attr(fctterm[[i]], "indConst") <- indIntercept
+            
+            attr(fctterm[[i]], "indGrp") <- list(attr(fctterm[[i]], "indGrp"))
+            attr(fctterm[[i]], "indPen") <- list(attr(fctterm[[i]], "indPen"))
+            attr(fctterm[[i]], "indUnpen") <- list(attr(fctterm[[i]], "indUnpen"))
+            attr(fctterm[[i]], "indConst") <- list(attr(fctterm[[i]], "indConst"))
+        } else {
+            by <- eval(attr(fct[[i]],"call")$by, m@frame)
+            attr(fctterm[[i]], "indGrp") <- vector(mode="list", length=nlevels(by))
+            attr(fctterm[[i]], "indPen") <-	vector(mode="list", length=nlevels(by))
+            attr(fctterm[[i]], "indUnpen") <- vector(mode="list", length=nlevels(by))
+            attr(fctterm[[i]], "indConst") <- vector(mode="list", length=nlevels(by))
+            for(j in 1:nlevels(by)){
+                attr(fctterm[[i]], "indGrp")[[j]] <- grep(paste("^",paste(names(fct)[i],".",names(fct[[i]]$Z)[j],sep=""), "$", sep=""), colnames(m@flist))
+                attr(fctterm[[i]], "indPen")[[j]] <- ranefinds[[attr(fctterm[[i]], "indGrp")[[j]]]]
+                if( ncol(fct[[i]]$X[[j]]) == 0){
+                    attr(fctterm[[i]], "indUnpen")[[j]] <-	 0
+                } else {
+                    attr(fctterm[[i]], "indUnpen")[[j]] <- sapply(
+                    paste("^",colnames(fct[[i]]$X[[j]]),"$",sep=""), grep, x=names(m@fixef))
+                    names(attr(fctterm[[i]], "indUnpen")[[j]]) <- colnames(fct[[i]]$X[[j]])
+                }
+                #add by-level intercept:
+                indBy <- grep(paste("^",safeDeparse(attr(fct[[i]],"call")$by), levels(by)[j],"$", sep=""), names(m@fixef))
+                indBy <- indBy[!(indBy %in% attr(fctterm[[i]], "indUnpen")[[j]])]
+                attr(fctterm[[i]], "indConst")[[j]] <- c(indIntercept, indBy)
+            }
+        }
+    }
+    return(fctterm)
+}
+
+
+subFcts <- function(rhs, fctterm, fct, fr)
+# replace formula parts for smooth functions with  xi + (xi^2+ )... + xi^dimUnpen + (1|fcti) or
+# by*(xi + xi^2+ ... + xi^dimUnpen) + (1|fcti.1) + ... + (1|fcti.N) for by-variable with N levels
+{
+    for(i in 1:length(fct)){
+        by <- eval(attr(fct[[i]],"call")$by, fr)
+        allPen <- eval(attr(fct[[i]],"call")$allPen)
+        diag <- eval(attr(fct[[i]],"call")$diag)
+        
+        replacement <-
+        if(is.null(by)){
+            # 1 + x.fx1 + x.fx2+ ... + (1|f.x)
+            paste(ifelse(ncol(fct[[i]]$X[[1]])!=0,
+            paste(as.vector(sapply(fct[[i]]$X,colnames)),collapse=" + "),
+            "1"),
+            " + (1|",names(fct)[i],")",sep="")
+        } else {
+            if(allPen){
+                if(!diag){
+                    # add correlated random effects for normally unpenalized part of basis grouped according to by and fake random intercept
+                    # (1 + x.fx1 + x.fx2+ ...|u.x.by)  + (1|f.x.by)
+                    paste(
+                    paste(paste("(1",
+                    paste(as.vector(sapply(fct[[i]]$X,colnames)), collapse="+"),
+                    sep="+"),
+                    "|",
+                    names(fct[[i]]$X),")",
+                    sep=""),
+                    paste("(1|",names(fct)[i],")",sep="", collapse=" + "),
+                    sep =" + ")
+                } else {
+                    # add independent random effects for normally unpenalized part of basis grouped according to by and fake random intercept
+                    # (1|u.x.by) + x.fx1|u.x.by) + x.fx2|u.x.by) + ...  + (1|f.x.by)
+                    paste(
+                    paste(c("(1", paste("(0+", as.vector(sapply(fct[[i]]$X,colnames)),sep="")),"|", names(fct[[i]]$X),")",sep="",collapse=" + "),
+                    paste("(1|",names(fct)[i],")",sep="", collapse=" + "),
+                    sep =" + ")
+                }
+                
+            } else {
+                # add fixed effect for unpenalized part of basis + fake random intercept for each by-level
+                # by + x.fx1.BYlevel1 + x.fx2.BYlevel1 +...+ (1|f.x.BYlevel1) + ... + x.fx1.BYlevelD + x.fx2.BYlevelD +... + (1|f.x.BYlevelD)
+                paste(#deparse(attr(fct[[i]],"call")$by),
+                ifelse(ncol(fct[[i]]$X[[1]])!=0,
+                paste(as.vector(sapply(fct[[i]]$X,colnames)),collapse=" + "),
+                "1"),
+                paste("(1|",names(fct)[i],".",names(fct[[i]]$Z),")",sep="", collapse=" + "),
+                sep =" + ")
+            }
+        }
+        rhs <- sub(safeDeparse(fctterm[[i]]), replacement, rhs, fixed=T)
+    }
+    return(rhs)
+}
+
+
+expandMf <- function(fr, fct)
+# cbind model frame with design matrices for unpenalized&penalized parts of the smooth fcts.
+{
+    for(i in 1:length(fct)){
+        #matrix with all unpenalized terms for fct
+        newX <- do.call(cBind, fct[[i]]$X)
+        
+        #factor variables with no. of levels = no. of penalized basis fcts
+        #newFact <-   replicate(length(fct[[i]]$Z), rep(1:ncol(fct[[i]]$Z[[1]]), length=nrow(fct[[i]]$Z[[1]])))
+        newFact <- data.frame(factor(rep(1:ncol(fct[[i]]$Z[[1]]), length=nrow(fct[[i]]$Z[[1]]))))
+        if(length(fct[[i]]$Z) > 1){
+            for(j in 2:length(fct[[i]]$Z)){
+                newFact <- cbind(newFact, factor(rep(1:ncol(fct[[i]]$Z[[1]]), length=nrow(fct[[i]]$Z[[1]]))))
+            }
+        }
+        
+        colnames(newFact) <- if(length(fct[[i]]$Z) == 1){
+            names(fct)[i]
+        } else {
+            paste(names(fct)[i],".",names(fct[[i]]$Z),sep="")
+        }
+        
+        if(eval(attr(fct[[i]],"call")$allPen)){
+            # duplicate grouping factor for allPen-function groups so that assignment (which entries in ranef belong to which penalization
+            # group) can be reconstructed from the fitted model object m if there is another random effect associated with the by-variable.
+            # will need this for predict etc.. since attr(m@flist,"assign") only works the other way around....
+            newFact <- cBind(newFact, eval(attr(fct[[i]],"call")$by, fr))
+            colnames(newFact)[ncol(newFact)] <- names(fct[[i]]$X)
+        } 
+        
+        fr <- cBind(cBind(fr, newX),newFact)
+    }
+    return(fr)
+}
+
+
+check.inits.cpglm <- function(inits, n.beta){
+  if (any(is.na(match(c("beta", "phi", "p"), names(inits)))))
+    stop("'inits' must contain 'beta', 'phi' and 'p'!")
+  if (length(inits$beta) != n.beta)
+    stop(gettextf("number of 'beta' in 'inits' is %d, but should
+                  equal %d (number of mean parameters)",
+                  length(inits$beta), n.beta, domain = NA))
+  if (length(inits$phi) > 1 || inits$phi <= 0)
+    stop("'phi' in 'inits' should be of length 1 and greater than 0")
+  if (length(inits$p) > 1 || inits$p <= 1 || inits$p >= 2)
+    stop("'p' in 'inits' should be of length 1 and between 1 and 2")
+}
+
+
+# check initial values in cpglmm
+check.inits.cpglmm <- function(inits, n.beta, n.term){
+  check.inits.cpglm(inits, n.beta)
+  if (!("Sigma" %in% names(inits)))
+    stop("the 'Sigma' component in 'inits' is missing")
+  if (length(inits$Sigma) != n.term)
+    stop(gettextf("'Sigma' in 'inits' should be of length %d", n.term))
+}
+
+
+#######################
+# get model frame and factor list
+# for cpglmm with smoothing terms
+#######################
+frFL <- function (formula, data, family, control = list(),
+verbose, weights, offset, contrasts, basisGenerators, bySetToZero = T)
+{
+    call <- match.call()
+    formula <- eval(call$formula)
+    tf <- stats::terms.formula(formula, specials = eval(call$basisGenerators,
+    parent.frame(2)))
+    f.ind <- unlist(attr(tf, "specials"))
+    n.f <- length(f.ind)
+    rhs <- safeDeparse(formula[[3]])
+    fctterm <- fct <- vector(mode = "list", length = n.f)
+    for (i in 1:n.f)
+    fctterm[[i]] <- attr(tf, "variables")[[f.ind[i] + 1]]
+    fct <- lapply(fctterm, eval, envir = data, enclos = parent.frame(2))
+    for (i in seq_along(fct))
+    fct[[i]] <- expandBasis(fct[[i]], eval(attr(fct[[i]], "call")$by, data),
+    eval(attr(fct[[i]], "call")$varying, data), bySetToZero)
+    names(fct) <- names(fctterm) <- paste("f.", lapply(fct,
+    function(x) {
+        paste(as.character(attr(x, "call")$x), ifelse(!is.null(eval(attr(x,
+        "call")$varying, data)), paste("X", deparse(attr(x,
+        "call")$varying), sep = ""), ""), ifelse(eval(attr(x,
+        "call")$allPen), paste(".", deparse(attr(x,
+        "call")$by), sep = ""), ""), sep = "")
+    }), sep = "")
+    rhs <- subFcts(rhs, fctterm, fct, data)
+    data <- expandMf(data, fct)
+    call[[1]] <- as.name("lmer")
+    call$doFit <- FALSE
+    call$data <- as.name("data")
+    call$formula <- as.formula(paste(formula[[2]], "~", rhs))
+    call["basisGenerators"] <- NULL
+    m <- eval(call, data)
+    #    m$fr$mf <- data
+    m <- subAZ(m, fct)
+    fctterm <- lapply(fct, function(x) attr(x, "call"))
+    return(list(m = m, fct = fct, fctterm = fctterm))
+}
+
+
+makeInteraction <- function(x)
+### from a list of length 2 return recursive interaction terms
+{
+    if (length(x) < 2) return(x)
+    trm1 <- makeInteraction(x[[1]])
+    trm11 <- if(is.list(trm1)) trm1[[1]] else trm1
+    list(substitute(foo:bar, list(foo=x[[2]], bar = trm11)), trm1)
+}
+
+
+##' Is f1 nested within f2?
+##'
+##' Does every level of f1 occur in conjunction with exactly one level
+##' of f2? The function is based on converting a triplet sparse matrix
+##' to a compressed column-oriented form in which the nesting can be
+##' quickly evaluated.
+##'
+##' @param f1 factor 1
+##' @param f2 factor 2
+
+##' @return TRUE if factor 1 is nested within factor 2
+isNested <- function(f1, f2)
+{
+    f1 <- as.factor(f1)
+    f2 <- as.factor(f2)
+    stopifnot(length(f1) == length(f2))
+    sm <- as(new("ngTMatrix",
+    i = as.integer(f2) - 1L,
+    j = as.integer(f1) - 1L,
+    Dim = c(length(levels(f2)),
+    length(levels(f1)))),
+    "CsparseMatrix")
+    all(diff(sm@p) < 2)
+}
+
+
+checkSTform <- function(ST, STnew)
+### Check that the 'STnew' argument matches the form of ST.
+{
+    stopifnot(is.list(STnew), length(STnew) == length(ST),
+    all.equal(names(ST), names(STnew)))
+    lapply(seq_along(STnew), function (i)
+    stopifnot(class(STnew[[i]]) == class(ST[[i]]),
+    all.equal(dim(STnew[[i]]), dim(ST[[i]]))))
+    all(unlist(lapply(STnew, function(m) all(diag(m) > 0))))
+}
+
+
+convergenceMessage <- function(cvg)
+### Create the convergence message
+{
+    msg <- switch(as.character(cvg),
+    "3" = "X-convergence (3)",
+    "4" = "relative convergence (4)",
+    "5" = "both X-convergence and relative convergence (5)",
+    "6" = "absolute function convergence (6)",
+    
+    "7" = "singular convergence (7)",
+    "8" = "false convergence (8)",
+    "9" = "function evaluation limit reached without convergence (9)",
+    "10" = "iteration limit reached without convergence (9)",
+    "14" = "storage has been allocated (?) (14)",
+    
+    "15" = "LIV too small (15)",
+    "16" = "LV too small (16)",
+    "63" = "fn cannot be computed at initial par (63)",
+    "65" = "gr cannot be computed at initial par (65)")
+    if (is.null(msg))
+    msg <- paste("See PORT documentation.  Code (", cvg, ")", sep = "")
+    msg
+}
+
+
+# optimize an objective function using different optimizers
+cplm_optim <- function(par, fn, gr = NULL, ...,
+lower = -Inf, upper = Inf, control = cplm.control(),
+optimizer = "nlminb"){
+    optimizer <- match.arg(optimizer, c("nlminb", "L-BFGS-B", "bobyqa"))
+    if (optimizer == "nlminb"){
+        ans <- stats::nlminb(par, fn, gradient = gr, ...,
+        lower = lower, upper = upper,
+        control = list(trace = control$trace,
+        iter.max = control$max.iter,
+        eval.max = control$max.fun))
+        names(ans)[2] <- "value"
+        return(ans[c("par", "value", "convergence", "message")])
+    } else if (optimizer == "L-BFGS-B"){
+        ans <- stats::optim(par, fn, gr = gr, ..., method = "L-BFGS-B",
+        lower = lower, upper = upper,
+        control = list(trace = control$trace,
+        maxit = control$max.iter))
+        return(ans[c("par", "value", "convergence", "message")])
+    } else if (optimizer == "bobyqa"){
+        ans <- nloptr::bobyqa(par, fn, lower = lower, upper = upper,
+        control = list(iprint = control$trace,
+        rhobe = 0.02, rhoend = 2e-7,
+        maxfun = control$max.fun),
+        ...)
+        names(ans)[c(2, 4, 5)] <- c("value", "convergence", "message")
+        return(ans[c("par", "value", "convergence", "message")])
+    }
+}
 
 
 cpglm.init <- function(fr, link.power = 0){
@@ -19,7 +416,7 @@ cpglm.init <- function(fr, link.power = 0){
 
 
 cpglm.fit <- function(fr, p = 1.5, link.power = 0) {
-  fm <- tweedie(var.power = p, link.power = link.power)
+  fm <- statmod::tweedie(var.power = p, link.power = link.power)
   int <- attr(attr(fr$mf,"terms"), "intercept") > 0L
   suppressWarnings(glm.fit(fr$X, fr$Y, weights = fr$wts, offset = fr$off,
                            family = fm, intercept = int))
@@ -188,9 +585,9 @@ lmerFactorList <- function(formula, fr, rmInt, drop)
                    mm <- mm[ , -icol , drop = FALSE]
                  }
                  ans <- list(f = ff,
-                             A = do.call(rBind,
+                             A = do.call(Matrix::rBind,
                                          lapply(seq_len(ncol(mm)), function(j) im)),
-                             Zt = do.call(rBind,
+                             Zt = do.call(Matrix::rBind,
                                           lapply(seq_len(ncol(mm)),
                                                  function(j) {im@x <- mm[,j]; im})),
                              ST = matrix(0, ncol(mm), ncol(mm),
@@ -203,7 +600,7 @@ lmerFactorList <- function(formula, fr, rmInt, drop)
                    ## create the appropriate number of copies,
                    ## prepend matrices of zeros, then rBind and drop0.
                    ans$A@x <- rep(0, length(ans$A@x))
-                   ans$Zt <- drop0(ans$Zt)
+                   ans$Zt <- Matrix::drop0(ans$Zt)
                  }
                  ans
                })
@@ -232,7 +629,7 @@ lmerFactorList <- function(formula, fr, rmInt, drop)
   names(fl) <- ufn
   ## check for nesting of factors
   dd["nest"] <- all(sapply(seq_along(fl)[-1],
-                           function(i) isNested(fl[[i-1]], fl[[i]])))
+  function(i) isNested(fl[[i-1]], fl[[i]])))
   list(trms = trms, fl = fl, dims = dd)
 }
 
@@ -382,15 +779,15 @@ mkZt <- function(FL, start, s = 1L)
   trms <- FL$trms
   ST <- lapply(trms, `[[`, "ST")
   Ztl <- lapply(trms, `[[`, "Zt")
-  Zt <- do.call(rBind, Ztl)
+  Zt <- do.call(Matrix::rBind, Ztl)
   Zt@Dimnames <- vector("list", 2)
   Gp <- c(0L, cumsum(vapply(Ztl, nrow, 1L, USE.NAMES=FALSE)))
-  .Call("mer_ST_initialize", ST, Gp, Zt)
-  A <- do.call(rBind, lapply(trms, `[[`, "A"))
+  .Call("mer_ST_initialize", ST, Gp, Zt, PACKAGE = "cplm")
+  A <- do.call(Matrix::rBind, lapply(trms, `[[`, "A"))
   rm(Ztl, FL)                         # because they could be large
   nc <- sapply(ST, ncol)         # of columns in els of ST
   Cm <- createCm(A, s)
-  L <- .Call("mer_create_L", Cm)
+  L <- .Call("mer_create_L", Cm, PACKAGE = "cplm")
   if (s < 2) Cm <- new("dgCMatrix")
   if (!is.null(start) && checkSTform(ST, start)) ST <- start
   
@@ -474,7 +871,7 @@ mycpglmm <- function(formula, link = "log", data, weights, offset, subset,
     data <- environment(formula)
   link.power <- make.link.power(link)
   formula <- eval(call$formula)
-  tf <- terms.formula(formula, specials = eval(call$basisGenerators, 
+  tf <- stats::terms.formula(formula, specials = eval(call$basisGenerators,
                                                parent.frame(2)))
   n.f <- length(unlist(attr(tf, "specials")))
   if (n.f) {
@@ -499,7 +896,7 @@ mycpglmm <- function(formula, link = "log", data, weights, offset, subset,
   if (nAGQ%%2 == 0) 
     nAGQ <- nAGQ + 1L
   dm$dd["nAGQ"] <- as.integer(nAGQ)
-  AGQlist <- .Call("cpglmm_ghq", nAGQ)
+  AGQlist <- .Call("cpglmm_ghq", nAGQ, PACKAGE = "cplm")
   M1 <- length(levels(dm$flist[[1]]))
   n <- ncol(dm$Zt)
   q <- dm$dd[["q"]]
@@ -549,15 +946,15 @@ mycpglmm <- function(formula, link = "log", data, weights, offset, subset,
   if (!doFit) 
     return(ans)
   if (optimizer == "nlminb") {
-    invisible(.Call("cpglmm_optimize", ans))
+    invisible(.Call("cpglmm_optimize", ans, PACKAGE = "cplm"))
     if (ans@dims[["cvg"]] > 6) 
       warning(convergenceMessage(ans@dims[["cvg"]]))
   }
   else {
     cpglmm_dev <- function(parm) {
-      .Call("cpglmm_update_dev", ans, parm)
+      .Call("cpglmm_update_dev", ans, parm, PACKAGE = "cplm")
     }
-    parm <- c(.Call("cpglmm_ST_getPars", ans), ans$fixef, 
+    parm <- c(.Call("cpglmm_ST_getPars", ans, PACKAGE = "cplm"), ans$fixef,
               log(ans$phi), ans$p)
     parm <- unname(parm)
     n.parm <- length(parm)
@@ -571,13 +968,13 @@ mycpglmm <- function(formula, link = "log", data, weights, offset, subset,
     ans@dims[["cvg"]] <- as.integer(rslt$convergence)
     if (rslt$convergence) 
       warning(rslt$message)
-    invisible(.Call("cpglmm_update_dev", ans, rslt$par))
+    invisible(.Call("cpglmm_update_dev", ans, rslt$par, PACKAGE = "cplm"))
   }
-  invisible(.Call("cpglmm_update_ranef", ans))
+  invisible(.Call("cpglmm_update_ranef", ans, PACKAGE = "cplm"))
   dev <- ans@deviance
   dev["sigmaML"] <- sqrt(ans@phi)
   ans@deviance <- dev
-  invisible(.Call("cpglmm_update_RX", ans))
+  invisible(.Call("cpglmm_update_RX", ans, PACKAGE = "cplm"))
   ans@vcov <- vcov(ans)
   if (n.f) {
     ans@smooths <- indsF(ans, setup$fct, setup$fctterm)

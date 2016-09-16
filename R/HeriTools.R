@@ -102,7 +102,7 @@ getNBReads <- function(vec.num.rep, alpha_g, sigma2_g, phi_g){
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features}.
 #' @param sigma2s Random effect variance vector \eqn{\sigma^2_g}'s, 
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features}.
-#' Dispersion parameter in NB models, \eqn{\phi_g}'s, a 
+#' @param phis Dispersion parameter in NB models, \eqn{\phi_g}'s, a
 #' \eqn{1 \times \texttt{num.features}}{1 x num.features} vector.
 #' @return A \eqn{G \times N}{G x N} matrix with NB reads. \eqn{N} is the 
 #'   total number of samples; \eqn{G} is the number of features. Column names 
