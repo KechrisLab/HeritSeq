@@ -39,7 +39,7 @@ The installation of dependencies only needs to be done once, if at all.
 
 The package requires a **R** version >=3.2.3.
 ```{r, eval = FALSE}
-install.packages("package/HeritSeq.tar.gz",repos=NULL,type="source")
+install.packages("package/HeritSeq_1.0.0.tar.gz",repos=NULL,type="source")
 library("HeritSeq")
 library("cplm")
 ```
