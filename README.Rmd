@@ -39,7 +39,7 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("DESeq2")
 biocLite("SummarizedExperiment")
 ```
-Next, download the [package tarball](https://github.com/KechrisLab/HeritSeq/blob/master/package/HeritSeq_1.0.0.tar.gz).
+Next, download the [package tarball](https://github.com/KechrisLab/HeritSeq/blob/master/package/HeritSeq_1.0.0.tar.gz) and install the package:
 
 ```{r, eval = FALSE}
 install.packages("HeritSeq_1.0.0.tar.gz",repos=NULL,type="source")
