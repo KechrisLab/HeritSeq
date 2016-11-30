@@ -16,6 +16,10 @@ called *simData*. This dataset was generated based on a recombinant inbred mice 
 by the variable *strains*. 
 
 ## Installation
+
+The package requires **R** version >=3.2.3.
+
+The installation of dependencies only needs to be done once, if at all.
 Instructions for installing the dependencies:
 ```{r, eval = FALSE}
 install.packages("lme4", repos="http://cran.r-project.org")
@@ -35,11 +39,10 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("DESeq2")
 biocLite("SummarizedExperiment")
 ```
-The installation of dependencies only needs to be done once, if at all.
+Next, download the [package tarball](https://github.com/KechrisLab/HeritSeq/blob/master/package/HeritSeq_1.0.0.tar.gz).
 
-The package requires a **R** version >=3.2.3.
 ```{r, eval = FALSE}
-install.packages("package/HeritSeq_1.0.0.tar.gz",repos=NULL,type="source")
+install.packages("HeritSeq_1.0.0.tar.gz",repos=NULL,type="source")
 library("HeritSeq")
 library("cplm")
 ```
