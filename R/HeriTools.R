@@ -10,6 +10,8 @@
 #install.packages("lme4", repos="http://cran.r-project.org")
 #install.packages("cplm", repos="http://cran.r-project.org")
 #install.packages("pbapply", repos="http://cran.r-project.org")
+#install.packages("statmod", repos="http://cran.r-project.org")
+
 #install.packages("R2admb")
 # install.packages("glmmADMB", 
 #                 repos=c("http://glmmadmb.r-forge.r-project.org/repos",
@@ -18,6 +20,10 @@
 # source("https://bioconductor.org/biocLite.R")
 # biocLite("DESeq2")
 
+
+requireNamespace("statmod", quietly = TRUE)
+requireNamespace("Matrix", quietly = TRUE)
+requireNamespace("minqa", quietly = TRUE)
 
 requireNamespace("lme4", quietly = TRUE)
 requireNamespace("glmmADMB", quietly = TRUE)

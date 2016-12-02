@@ -252,6 +252,8 @@ We would like to thank Yanwei (Wayne) Zhang, the cplm package author, for helpfu
 - Pamela Russell pamela.russell@ucdenver.edu
 - Pratyaydipta Rudra pratyaydipta.rudra@ucdenver.edu
 - Brian Vestal brian.vestal@ucdenver.edu
+- Katerina Kechris katerina.kechris@ucdenver.edu
+- Laura Saba laura.saba@undenver.edu
 
 
 ## License

@@ -6,10 +6,6 @@
 
 
 #####cpglmm utility functions #####
-#install.packages("statmod")
-requireNamespace("statmod", quietly = TRUE)
-requireNamespace("Matrix", quietly = TRUE)
-requireNamespace("nloptr", quietly = TRUE)
 
 
 expandBasis <- function(basis, by, varying, bySetToZero = T){
@@ -782,12 +778,12 @@ mkZt <- function(FL, start, s = 1L)
   Zt <- do.call(Matrix::rBind, Ztl)
   Zt@Dimnames <- vector("list", 2)
   Gp <- c(0L, cumsum(vapply(Ztl, nrow, 1L, USE.NAMES=FALSE)))
-  .Call("mer_ST_initialize", ST, Gp, Zt, PACKAGE = "cplm")
+  .Call("mer_ST_initialize", ST, Gp, Zt)
   A <- do.call(Matrix::rBind, lapply(trms, `[[`, "A"))
   rm(Ztl, FL)                         # because they could be large
   nc <- sapply(ST, ncol)         # of columns in els of ST
   Cm <- createCm(A, s)
-  L <- .Call("mer_create_L", Cm, PACKAGE = "cplm")
+  L <- .Call("mer_create_L", Cm)
   if (s < 2) Cm <- new("dgCMatrix")
   if (!is.null(start) && checkSTform(ST, start)) ST <- start
   
@@ -896,7 +892,7 @@ mycpglmm <- function(formula, link = "log", data, weights, offset, subset,
   if (nAGQ%%2 == 0) 
     nAGQ <- nAGQ + 1L
   dm$dd["nAGQ"] <- as.integer(nAGQ)
-  AGQlist <- .Call("cpglmm_ghq", nAGQ, PACKAGE = "cplm")
+  AGQlist <- .Call("cpglmm_ghq", nAGQ)
   M1 <- length(levels(dm$flist[[1]]))
   n <- ncol(dm$Zt)
   q <- dm$dd[["q"]]
@@ -946,15 +942,15 @@ mycpglmm <- function(formula, link = "log", data, weights, offset, subset,
   if (!doFit) 
     return(ans)
   if (optimizer == "nlminb") {
-    invisible(.Call("cpglmm_optimize", ans, PACKAGE = "cplm"))
+    invisible(.Call("cpglmm_optimize", ans))
     if (ans@dims[["cvg"]] > 6) 
       warning(convergenceMessage(ans@dims[["cvg"]]))
   }
   else {
     cpglmm_dev <- function(parm) {
-      .Call("cpglmm_update_dev", ans, parm, PACKAGE = "cplm")
+      .Call("cpglmm_update_dev", ans, parm)
     }
-    parm <- c(.Call("cpglmm_ST_getPars", ans, PACKAGE = "cplm"), ans$fixef,
+    parm <- c(.Call("cpglmm_ST_getPars", ans), ans$fixef,
               log(ans$phi), ans$p)
     parm <- unname(parm)
     n.parm <- length(parm)
@@ -968,13 +964,13 @@ mycpglmm <- function(formula, link = "log", data, weights, offset, subset,
     ans@dims[["cvg"]] <- as.integer(rslt$convergence)
     if (rslt$convergence) 
       warning(rslt$message)
-    invisible(.Call("cpglmm_update_dev", ans, rslt$par, PACKAGE = "cplm"))
+    invisible(.Call("cpglmm_update_dev", ans, rslt$par))
   }
-  invisible(.Call("cpglmm_update_ranef", ans, PACKAGE = "cplm"))
+  invisible(.Call("cpglmm_update_ranef", ans))
   dev <- ans@deviance
   dev["sigmaML"] <- sqrt(ans@phi)
   ans@deviance <- dev
-  invisible(.Call("cpglmm_update_RX", ans, PACKAGE = "cplm"))
+  invisible(.Call("cpglmm_update_RX", ans))
   ans@vcov <- vcov(ans)
   if (n.f) {
     ans@smooths <- indsF(ans, setup$fct, setup$fctterm)
