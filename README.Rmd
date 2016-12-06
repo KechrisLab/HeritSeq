@@ -1,6 +1,3 @@
----
-output: pdf_document
----
 ## Overview
 The **HeritSeq** package provides heritability score analyses under linear mixed models (LMM) or generalized linear mixed models (GLMM) for count data motivated by high-throughput sequencing. It is applicable to counts with biological replicates. This package includes functions to:
 
