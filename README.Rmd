@@ -39,6 +39,9 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("DESeq2")
 biocLite("SummarizedExperiment")
 ```
+Since R for OS X Maverick (and latter versions) was compiled using gfortran-4.8, Mac users might recieve a “-lgfortran” error when installing the cplm package. This problem and its solution are stated [here]( http://thecoatlessprofessor.com/programming/rcpp-rcpparmadillo-and-os-x-mavericks-lgfortran-and-lquadmath-error/).
+
+
 Next, download the [package tarball](https://github.com/KechrisLab/HeritSeq/blob/master/package/HeritSeq_1.0.0.tar.gz) and install the package:
 
 ```{r, eval = FALSE}
