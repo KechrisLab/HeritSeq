@@ -20,11 +20,6 @@
 # source("https://bioconductor.org/biocLite.R")
 # biocLite("DESeq2")
 
-
-# requireNamespace("statmod", quietly = TRUE)
-# requireNamespace("Matrix", quietly = TRUE)
-# requireNamespace("minqa", quietly = TRUE)
-
 requireNamespace("lme4", quietly = TRUE)
 requireNamespace("glmmADMB", quietly = TRUE)
 requireNamespace("tweedie", quietly = TRUE)
