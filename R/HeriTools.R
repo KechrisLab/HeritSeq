@@ -21,15 +21,14 @@
 # biocLite("DESeq2")
 
 
-requireNamespace("statmod", quietly = TRUE)
-requireNamespace("Matrix", quietly = TRUE)
-requireNamespace("minqa", quietly = TRUE)
+# requireNamespace("statmod", quietly = TRUE)
+# requireNamespace("Matrix", quietly = TRUE)
+# requireNamespace("minqa", quietly = TRUE)
 
 requireNamespace("lme4", quietly = TRUE)
 requireNamespace("glmmADMB", quietly = TRUE)
 requireNamespace("tweedie", quietly = TRUE)
 requireNamespace("cplm", quietly = TRUE)
-# attach(cplm) # cplm::cpglmm does not work
 requireNamespace("pbapply", quietly = TRUE)
 requireNamespace("DESeq2", quietly = TRUE)
 requireNamespace("MASS", quietly = TRUE)
@@ -517,10 +516,10 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     dat_sub <- data.frame(expr = as.numeric(CountVector), strain = Strains)
     
     fit <- tryCatch({
-      fit1 <- mycpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
+      fit1 <- cplm::cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
                      optimizer = optimizer)
     }, error=function(err){
-      fit1 <- try({mycpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
+      fit1 <- try({cplm::cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
                           optimizer = optimizer)}) 
       return(fit1)
     })
@@ -691,7 +690,6 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL, test
                         weights = PriorWeight)
     test.stat <- 2*logLik(model_sub) - 2*logLik(model_sub_red)
     if (test.stat<1e-6) {test.stat <- 0}
-    # test.stat <- round(test.stat, digits = 1e-6)
     pval <- 0.5*pchisq(test.stat, df = 1, lower.tail = FALSE) + 
       0.5*as.numeric(test.stat == 0)
     return(list(vpc = vpc, pval = pval))

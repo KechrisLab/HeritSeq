@@ -23,14 +23,8 @@ Imports:
     DESeq2,
     glmmADMB,
     lme4,
-    nloptr,
-    minqa,
     pbapply,
     tweedie,
     MASS,
-    Matrix,
-    statmod,
-    stats,
-    SummarizedExperiment,
-    utils
+    SummarizedExperiment
 RoxygenNote: 5.0.1
