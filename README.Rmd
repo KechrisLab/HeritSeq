@@ -1,14 +1,14 @@
 ## Overview
 The **HeritSeq** package provides heritability score analyses under linear mixed models (LMM) or generalized linear mixed models (GLMM) for count data motivated by high-throughput sequencing. It is applicable to counts with biological replicates. This package includes functions to:
 
-- compute heritability score under LMM for normalized/transformed dataset, and under negative binomial mixed models (NBMM) or compound Poisson mixed models (CPMM) for data without transformations.  
+- compute heritability score under LMM for a normalized/transformed dataset, and under negative binomial mixed models (NBMM) or compound Poisson mixed models (CPMM) for data without transformations.  
 - test presence of heritability under LMM, NBMM or CPMM.
 - generate confidence intervals of estimated heritability score. 
 - simulate synthetic high-throughput sequencing datasets using NBMM or CPMM. 
 
-See [^1] for model details and performance comparisons. 
+See [1] for model details and performance comparisons. 
 
-[^1]: Rudra, P., Shi, W. J., Vestal, B., Russell, P. H., Odell, A., Dowell, R., Radcliffe, R., Saba, L. M., & Kechris, K. *Model based heritability scores for high-throughput sequencing data*. (submitted). 
+[1]: Rudra, P., Shi, W. J., Vestal, B., Russell, P. H., Odell, A., Dowell, R., Radcliffe, R., Saba, L. M., & Kechris, K. *Model based heritability scores for high-throughput sequencing data*. (submitted). 
 
 ## Example dataset
 The **HeritSeq** package includes an example high-throughput sequencing dataset 
@@ -39,7 +39,7 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("DESeq2")
 biocLite("SummarizedExperiment")
 ```
-Since R for OS X Maverick (and latter versions) was compiled using gfortran-4.8, Mac users might recieve a “-lgfortran” error when installing the cplm package. This problem and its solution are stated [here]( http://thecoatlessprofessor.com/programming/rcpp-rcpparmadillo-and-os-x-mavericks-lgfortran-and-lquadmath-error/).
+Since R for OS X Maverick (and latter versions) was compiled using gfortran-4.8, Mac users might receive a “-lgfortran” error when installing the cplm package. This problem and its solution are stated [here]( http://thecoatlessprofessor.com/programming/rcpp-rcpparmadillo-and-os-x-mavericks-lgfortran-and-lquadmath-error/).
 
 
 Next, download the [package tarball](https://github.com/KechrisLab/HeritSeq/blob/master/package/HeritSeq_1.0.0.tar.gz) and install the package:
