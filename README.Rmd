@@ -1,3 +1,6 @@
+---
+output: pdf_document
+---
 ## Overview
 The **HeritSeq** package provides heritability score analyses under linear mixed models (LMM) or generalized linear mixed models (GLMM) for count data motivated by high-throughput sequencing. It is applicable to counts with biological replicates. This package includes functions to:
 
@@ -127,11 +130,11 @@ The function *fitComputeVPC.lmer( )* fits a linear mixed model for each feature 
 
 [^4]: Bates, D., Mächler, M., Bolker, B., & Walker, S. (2014). *Fitting linear mixed-effects models using lme4*. arXiv preprint arXiv:1406.5823.
 
-### Voom
+### voom
 **limma** voom is another popular method to transform counts to Gaussian-like 
 data [^5]. It is a less preferrable method for computing VPC comparing to the ones above (see reference [1]). 
 
-Transform *simData* using Voom and fit features using LMM as above:
+Transform *simData* using voom and fit features using LMM as above:
 ```{r, eval = FALSE}
 library(limma)
 voomed.librarySize <- voom(counts = simData, 
@@ -144,9 +147,9 @@ vpc.voom <- fitComputeVPC.lmer(CountMatrix = simData.voom,
                                Strains = strains,
                                PriorWeights = weights.voom,
                                test = FALSE,
-                               VPCname = "Voom")[[1]]
+                               VPCname = "voom")[[1]]
 ```
-Note that the Voom method does provide a prior weight for fitting the regression.  
+Note that the voom method does provide a prior weight for fitting the regression.  
 
 [^5]: Ritchie, M. E., Phipson, B., Wu, D., Hu, Y., Law, C. W., Shi, W., & Smyth, G. K. (2015). *limma powers differential expression analyses for RNA-sequencing and microarray studies*. Nucleic acids research, gkv007.
 
@@ -155,18 +158,18 @@ In most cases, it is not clear which method is more appropriate for the given da
 ```{r, eval = FALSE}
 library(psych)
 h2 <- cbind(vpc.nb, vpc.cp, vpc.vst, vpc.voom)
-colnames(h2) <- c("NB", "CP", "VST", "Voom")
+colnames(h2) <- c("NB", "CP", "VST", "voom")
 pairs.panels(x = h2, ellipses = FALSE, main = "Compare VPC")
 ```
 ```{r, echo = FALSE, fig.height = 6, fig.width = 6}
 library(psych)
-load("~/Documents/heritseq/heritexample_result.Rdata")
+load("heritexample_result.Rdata")
 pairs.panels(x = h2, ellipses = FALSE, main = "Compare VPC")
 ```
 
 The function *pairs.panels( )* creates multiple panels for pairwise comparison of the methods. Along the diagonal are the histograms and kernel density plot of estimated VPC values. The panels below show pairwise comparison of the methods with locally weighted scatterplot smoothing (loess regression) in red. Above the diagonal are the correlation coefficient values. 
 
-The first three methods: NB, CP, and Voom present relatively consistent results. The features with top VPC scores are similar. 
+The first three methods: NB, CP, and voom present relatively consistent results. The features with top VPC scores are similar. 
 
 
 ## Hypothesis testing
@@ -177,7 +180,7 @@ The VPC confidence intervals (CIs) can be generated using a parametric
 bootstrap. When choosing the VST method, the bootstraped data are generated 
 from negative binomal models followed by the variance stablized transformation. 
 Due to its less superior performance (detailed discussion can be found in 
-Reference [1]), the Voom approach is excluded for the *getBootCI( )* function. 
+Reference [1]), the voom approach is excluded for the *getBootCI( )* function. 
 
 Compute CI based on 100 boostrap samples for the first 3 features:
 ```{r, eval = FALSE}
