@@ -1,18 +1,17 @@
 Package: HeritSeq
 Title: Heritability of Gene Expression for Next-Generation Sequencing
 Version: 1.0.0
-Date: 2016-08-05
+Date: 2016-12-07
 Author: W. Jenny Shi [aut, cre],
     Pamela Russell [aut],
     Pratyaydipta Rudra [aut, cre],
     Brian Vestal [aut, cre]
 Maintainer: W. Jenny Shi <wjennyshi@gmail.com>
-Description: This package provides a statistical framework to analyze 
-    heritability of gene expression based on next-generation sequencing 
-    data and simulating sequencing reads. Variance partition coefficients 
-    (VPC) are computed using linear mixed effects and generalized linear 
-    mixed effects models. Compound Poisson and negative binomial models 
-    are included.
+Description: Statistical framework to analyze heritability of gene expression 
+    based on next-generation sequencing data and simulating sequencing reads. 
+    Variance partition coefficients (VPC) are computed using linear mixed effects 
+    and generalized linear mixed effects models. Compound Poisson and negative 
+    binomial models are included.
 Depends:
     R (>= 3.2.3)
 License: GPL-2
