@@ -216,8 +216,8 @@ phis1 <- c(0.5, 1, 0.05, 0.01, 0.1)
  
 set.seed(1234)
 nbData <- getReadMatrix.NB(vec.num.rep = rep.num, 
-                          beta0s = a0s, 
-                          sig2.strains = sig2s, 
+                          alphas = a0s, 
+                          sigma2s = sig2s, 
                           phis = phis1)
 ```
 
@@ -235,8 +235,8 @@ phis2 <- c(1.5, 1, 0.5, 0.1, 0.1)
 
 set.seed(1234)
 cpData <- getReadMatrix.CP(vec.num.rep = rep.num, 
-                          beta0s = a0s, 
-                          sig2.strains = sig2s, 
+                          alphas = a0s, 
+                          sigma2s = sig2s, 
                           ps = ps, 
                           phis = phis2)
 ```

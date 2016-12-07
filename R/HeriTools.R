@@ -57,9 +57,7 @@ getNBReads <- function(vec.num.rep, alpha_g, sigma2_g, phi_g){
   #   sample, s is the strain number, r is the replicate number within the 
   #   strain. 
   
-  if(sigma2_g == 0){
-    warning("No random effect.")
-  }else if(sigma2_g <0){
+  if(sigma2_g <0){
     stop("Random effect variance needs to be non-negative.")
   }
   if(phi_g <= 0){
@@ -163,9 +161,7 @@ getCPReads <- function(vec.num.rep, alpha_g, sigma2_g, p_g, phi_g){
   if(abs(p_g - 1.5) >= 0.5){
     stop("The tweedie parameter p needs to satisfy 1<p<2.")
   }
-  if(sigma2_g == 0){
-    warning("No random effect.")
-  }else if(sigma2_g <0){
+  if(sigma2_g <0){
     stop("Random effect variance needs to be non-negative.")
   }
   if(phi_g <= 0){
@@ -377,9 +373,7 @@ compute1NBVPC <- function(alpha_g, sigma2_g, phi_g){
   # vpc: a numerical value for variance partition coefficient computed based
   #   on negative binomial mixture model (NBMM).
   
-  if(sigma2_g == 0){
-    warning("No random effect.")
-  }else if(sigma2_g < 0){
+  if(sigma2_g < 0){
     stop("Random effect variance needs to be non-negative.")
   }
   if(phi_g <= 0){
@@ -511,10 +505,10 @@ fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
     dat_sub <- data.frame(expr = as.numeric(CountVector), strain = Strains)
     
     fit <- tryCatch({
-      fit1 <- cplm::cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
+      fit1 <- cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
                      optimizer = optimizer)
     }, error=function(err){
-      fit1 <- try({cplm::cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
+      fit1 <- try({cpglmm(expr ~ 1 + (1|strain), data = dat_sub, 
                           optimizer = optimizer)}) 
       return(fit1)
     })
@@ -591,9 +585,7 @@ compute1CPVPC <- function(alpha_g, sigma2_g, p_g, phi_g){
   if(abs(p_g - 1.5) >= 0.5){
     stop("The tweedie parameter p needs to satisfy 1<p<2.")
   }
-  if(sigma2_g == 0){
-    warning("No random effect.")
-  }else if(sigma2_g <0){
+  if(sigma2_g <0){
     stop("Random effect variance needs to be non-negative.")
   }
   if(phi_g <= 0){
