@@ -47,7 +47,6 @@ Next, download the [package tarball](https://github.com/KechrisLab/HeritSeq/blob
 ```{r, eval = FALSE}
 install.packages("HeritSeq_1.0.0.tar.gz",repos=NULL,type="source")
 library("HeritSeq")
-library("cplm")
 ```
 ```{r, echo = FALSE}
 setwd("~/Documents/heritseq/")
