@@ -109,6 +109,7 @@ was introduced in the package **DESeq2** [^3]. It is based on a negative binomia
 
 Transform *simData* using VST and fit features using LMM:
 ```{r, eval = FALSE}
+library(DESeq2)
 cds <- DESeqDataSetFromMatrix(countData = round(simData), 
                               colData = data.frame(strain = strains),
                               design = formula(~strain))
