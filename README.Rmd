@@ -15,7 +15,7 @@ See [1] for model details and performance comparisons.
 
 ## Example dataset
 The **HeritSeq** package includes an example high-throughput sequencing dataset 
-called *simData*. This dataset was generated based on a recombinant inbred mice panel miRNA sequencing counts. It is an 881 by 175 matrix, containing 881 features and 175 samples. The total number of strains is 59, and the strain labels are recorded 
+called *simData*. This dataset was generated based on a recombinant inbred mice panel miRNA sequencing counts. It is an 100 by 175 matrix, containing 100 features and 175 samples. The total number of strains is 59, and the strain labels are recorded 
 by the variable *strains*. 
 
 ## Installation
@@ -30,8 +30,6 @@ install.packages("cplm", repos="http://cran.r-project.org")
 install.packages("pbapply", repos="http://cran.r-project.org")
 install.packages("statmod", repos="http://cran.r-project.org")
 install.packages("MASS", repos="http://cran.r-project.org")
-install.packages("stats", repos="http://cran.r-project.org")
-install.packages("utils", repos="http://cran.r-project.org")
 
 install.packages("glmmADMB", 
                 repos=c("http://glmmadmb.r-forge.r-project.org/repos",
@@ -42,6 +40,9 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("DESeq2")
 biocLite("SummarizedExperiment")
 ```
+
+For some systems an [alternative installation]( http://glmmadmb.r-forge.r-project.org/ ) might be needed for the glmmADMB package.  
+
 Since R for OS X Maverick (and latter versions) was compiled using gfortran-4.8, Mac users might receive a “-lgfortran” error when installing the cplm package. This problem and its solution are stated [here]( http://thecoatlessprofessor.com/programming/rcpp-rcpparmadillo-and-os-x-mavericks-lgfortran-and-lquadmath-error/).
 
 
@@ -241,8 +242,12 @@ cpData <- getReadMatrix.CP(vec.num.rep = rep.num,
                           phis = phis2)
 ```
 
+## Warning messages
+All the model fitting functions: *fit.NB( )*, *fit.CP( )*, and *fitComputeVPC.lmer( )* rely on optimization algorithms. In some cases, they may produce a warning message regarding convergence. We investigated some features that encountered this issue. The corresponding results appear to be reasonable. 
+
+
 ## Versioning
-Date: 2016-12-07
+Date: 2016-12-12
 
 **Version: 1.0.0**
 

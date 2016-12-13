@@ -373,15 +373,24 @@ compute1NBVPC <- function(alpha_g, sigma2_g, phi_g){
   # vpc: a numerical value for variance partition coefficient computed based
   #   on negative binomial mixture model (NBMM).
   
-  if(sigma2_g < 0){
-    stop("Random effect variance needs to be non-negative.")
-  }
-  if(phi_g <= 0){
-    stop("Invalid dispersion value.")
+  if(is.na(sigma2_g)){
+    vpc <- NA
+  }else{
+    if(sigma2_g < 0){
+      stop("Random effect variance needs to be non-negative.")
+    }
+    if(phi_g <= 0){
+      stop("Invalid dispersion value.")
+    }
+    
+    denom <- exp(sigma2_g) - 1 + exp(sigma2_g)*phi_g + exp(-alpha_g - sigma2_g / 2)
+    if(denom == 0){
+      vpc <- NA
+    }else{
+      vpc <- (exp(sigma2_g) - 1) / denom
+    }
   }
   
-  vpc <- (exp(sigma2_g) - 1) / 
-    (exp(sigma2_g) - 1 + exp(sigma2_g)*phi_g + exp(-alpha_g - sigma2_g / 2))
   return(vpc)
   
 }
@@ -582,19 +591,29 @@ compute1CPVPC <- function(alpha_g, sigma2_g, p_g, phi_g){
   # vpc: a numerical value for variance partition coefficient computed based
   #   on compound Poisson mixture model (CPMM).
   
-  if(abs(p_g - 1.5) >= 0.5){
-    stop("The tweedie parameter p needs to satisfy 1<p<2.")
-  }
-  if(sigma2_g <0){
-    stop("Random effect variance needs to be non-negative.")
-  }
-  if(phi_g <= 0){
-    stop("Invalid dispersion value.")
+  if(is.na(sigma2_g)){
+    vpc <- NA
+  }else{
+    if(abs(p_g - 1.5) >= 0.5){
+      stop("The tweedie parameter p needs to satisfy 1<p<2.")
+    }
+    if(sigma2_g <0){
+      stop("Random effect variance needs to be non-negative.")
+    }
+    if(phi_g <= 0){
+      stop("Invalid dispersion value.")
+    }
+    
+    vpc.numerator <- exp(2 * alpha_g + 2 * sigma2_g ) - exp(2 * alpha_g + sigma2_g)
+    
+    denom <- vpc.numerator + phi_g * exp(p_g * alpha_g + p_g^2 * sigma2_g / 2)
+    if(denom == 0){
+      vpc <- NA
+    }else{
+      vpc.numerator/denom
+    }
   }
   
-  vpc.numerator <- exp(2 * alpha_g + 2 * sigma2_g ) - exp(2 * alpha_g + sigma2_g)
-  vpc <- vpc.numerator/
-    (vpc.numerator + phi_g * exp(p_g * alpha_g + p_g^2 * sigma2_g / 2))
   return(vpc)
 }
 

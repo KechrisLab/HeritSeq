@@ -7,9 +7,9 @@
 
 #' A simulated sequencing dataset.
 #' 
-#' A matrix containing simulated counts for 881 features (rows) and 175 samples (columns)
+#' A matrix containing simulated counts for 100 features (rows) and 175 samples (columns)
 #' 
-#' @format A matrix with 881 rows and 175 columns
+#' @format A matrix with 100 rows and 175 columns
 "simData"
 
 #' Voom transformed version of simData.
