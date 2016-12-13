@@ -4,7 +4,7 @@
 \name{para_cp}
 \alias{para_cp}
 \title{Parameter matrix obtained from simData by fitting CPMM.}
-\format{An object of class \code{matrix} with 881 rows and 4 columns.}
+\format{An object of class \code{matrix} with 100 rows and 4 columns.}
 \usage{
 para_cp
 }
