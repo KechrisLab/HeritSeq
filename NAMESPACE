@@ -18,6 +18,3 @@ importFrom(cplm, cpglmm)
 importFrom(cplm, cpglm)
 importFrom(cplm, VarCorr)
 importFrom(lme4, lmer)
-importFrom("stats", "AIC", "formula", "lm", "logLik", "pchisq",
-                        "quantile", "rnorm")
-importFrom("utils", "fix")
