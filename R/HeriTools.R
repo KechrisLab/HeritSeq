@@ -610,7 +610,7 @@ compute1CPVPC <- function(alpha_g, sigma2_g, p_g, phi_g){
     if(denom == 0){
       vpc <- NA
     }else{
-      vpc.numerator/denom
+      vpc <- vpc.numerator/denom
     }
   }
   
