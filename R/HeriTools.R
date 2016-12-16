@@ -823,14 +823,18 @@ fitComputeVPC.lmer <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' @export
 getBootCI = function(CountMatrix, Strains, which.features, num.boot,
                      method="NB-fit", alpha=0.05, optimizer = "nlminb"){
-  all.vpcs = matrix(NA, nrow = length(which.features), ncol=num.boot)
+
+  num.features <- length(which.features)
+  
+  all.vpcs = matrix(NA, nrow = num.features, ncol=num.boot)
   vec.num.rep = as.numeric(table(Strains))
   
   if (method=="NB-fit"){
     print("Getting initial point estimates using the NB-fit method")
     fit = fit.NB(CountMatrix[which.features,], Strains)
+    if(num.features == 1){fit$paras <- matrix(fit$paras, nrow = 1)}
     
-    for (i in 1:length(which.features)){
+    for (i in 1:num.features){
       print(paste("Bootstraping feature",i))
       boot.data = getReadMatrix.NB(vec.num.rep, 
                                    rep(fit$paras[i,1],num.boot), 
@@ -844,16 +848,12 @@ getBootCI = function(CountMatrix, Strains, which.features, num.boot,
                        apply(all.vpcs, 1, quantile, probs = 1-alpha/2))
     
     return(list(intervals = intervals, all.vpcs = all.vpcs))
-  }
-  
-  
-  
-  
-  if (method=="CP-fit"){
+  }else if (method=="CP-fit"){
     print("Getting initial point estimates using the CP-fit method")
     fit = fit.CP(CountMatrix[which.features,], Strains, optimizer = optimizer)
+    if(num.features == 1){fit$paras <- matrix(fit$paras, nrow = 1)}
     
-    for (i in 1:length(which.features)){
+    for (i in 1:num.features){
       print(paste("Bootstraping feature",i))
       boot.data = getReadMatrix.CP(vec.num.rep, 
                                    rep(fit$paras[i,1],num.boot), 
@@ -868,29 +868,34 @@ getBootCI = function(CountMatrix, Strains, which.features, num.boot,
                        apply(all.vpcs, 1, quantile, probs = 1-alpha/2))
     
     return(list(intervals = intervals, all.vpcs = all.vpcs))
-  }
-  
-  
-  
-  
-  if (method=="VST"){
+  }else if (method=="VST"){
     print("Getting initial point estimates using the VST method")
     fit = fit.NB(CountMatrix[which.features,], Strains)
+    if(num.features == 1){fit$paras <- matrix(fit$paras, nrow = 1)}
     
-    for (i in 1:length(which.features)){
+    for (i in 1:num.features){
       print(paste("Bootstraping feature",i))
       boot.data = getReadMatrix.NB(vec.num.rep, 
                                    rep(fit$paras[i,1],num.boot), 
                                    rep(fit$paras[i,2],num.boot),
                                    rep(fit$paras[i,3],num.boot))
       
-      cds <- DESeq2::DESeqDataSetFromMatrix(round(boot.data), 
+      cds <- DESeq2::DESeqDataSetFromMatrix(boot.data, 
                                             data.frame(strain = Strains), 
                                             formula(~strain))
-      cds <- DESeq2::estimateSizeFactors(cds)
+
+      geoMeans <- apply(boot.data, 1, function(cnt){
+        # Alternative method for calculating the geometric means to allow minimum count to be zero for all features. 
+        if(all(cnt == 0)){ 
+          return(0)
+        }else{
+          return(exp(mean(log(cnt[cnt != 0]))))
+        }
+      })
+      cds <- DESeq2::estimateSizeFactors(cds, geoMeans = geoMeans)
       
       if (sum(is.na(sizeFactors(cds)))>0){   
-        cds <- DESeq2::DESeqDataSetFromMatrix(round(1+boot.data), 
+        cds <- DESeq2::DESeqDataSetFromMatrix(1+boot.data, 
                                               data.frame(strain = Strains), 
                                               formula(~strain)) 
         # 1 added to avoid too many low counts in those cases
@@ -908,6 +913,8 @@ getBootCI = function(CountMatrix, Strains, which.features, num.boot,
                        apply(all.vpcs, 1, quantile, probs = 1-alpha/2))
     
     return(list(intervals = intervals, all.vpcs = all.vpcs))
+  }else{
+    stop("Invalid method type. Possible methods are: NB-fit, CP-fit, and VST.")
   }
 }
 
