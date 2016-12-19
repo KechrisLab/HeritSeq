@@ -1,11 +1,13 @@
 Package: HeritSeq
 Title: Heritability of Gene Expression for Next-Generation Sequencing
 Version: 1.0.0
-Date: 2016-12-07
+Date: 2016-12-19
 Author: W. Jenny Shi [aut, cre],
     Pamela Russell [aut],
     Pratyaydipta Rudra [aut, cre],
-    Brian Vestal [aut, cre]
+    Brian Vestal [aut, cre],
+    Katerina Kechris [aut],
+    Laura Saba [aut]
 Maintainer: W. Jenny Shi <wjennyshi@gmail.com>
 Description: Statistical framework to analyze heritability of gene expression 
     based on next-generation sequencing data and simulating sequencing reads. 
