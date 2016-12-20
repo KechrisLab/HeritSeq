@@ -21,7 +21,6 @@
 # biocLite("DESeq2")
 
 requireNamespace("lme4", quietly = TRUE)
-requireNamespace("glmmADMB", quietly = TRUE)
 requireNamespace("tweedie", quietly = TRUE)
 requireNamespace("cplm", quietly = TRUE)
 requireNamespace("pbapply", quietly = TRUE)

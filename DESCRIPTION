@@ -22,10 +22,11 @@ LazyData: true
 Imports:
     cplm,
     DESeq2,
-    glmmADMB,
     lme4,
     pbapply,
     tweedie,
     MASS,
     SummarizedExperiment
+Suggests:
+    glmmADMB
 RoxygenNote: 5.0.1
