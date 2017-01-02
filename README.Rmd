@@ -1,3 +1,6 @@
+---
+output: pdf_document
+---
 
 ## Overview
 The **HeritSeq** package provides heritability score analyses under linear mixed models (LMM) or generalized linear mixed models (GLMM) for count data motivated by high-throughput sequencing. It is applicable to counts with biological replicates. This package includes functions to:
@@ -73,6 +76,7 @@ is $\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{\sigma^2_{g}}
 
 Compute VPC for all features using NBMM:
 ```{r, eval = FALSE}
+library(glmmADMB)
 result.nb <- fit.NB(CountMatrix = simData, Strains = strains, test = FALSE)
 vpc.nb <- computeVPC.NB(para = result.nb[[1]])
 ```
@@ -245,14 +249,14 @@ All the model fitting functions: *fit.NB( )*, *fit.CP( )*, and *fitComputeVPC.lm
 
 
 ## Versioning
-Date: 2016-12-12
+Date: 2017-1-2
 
 **Version: 1.0.0**
 
 
 ## Acknowledgements
 
-We would like to thank Yanwei (Wayne) Zhang, the cplm package author, for helpful discussions regarding the compound Poisson regression fit in cplm and for providing a modified function before the new version of his package is released. 
+We would like to thank Yanwei (Wayne) Zhang, the cplm package author, for helpful discussions regarding the compound Poisson regression fit in cplm and for providing a modified function before the new version of his package was released. 
 
 
 ## Authors

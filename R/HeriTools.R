@@ -252,7 +252,7 @@ getReadMatrix.CP <- function(vec.num.rep, alphas, sigma2s, ps, phis){
 #' 
 #' Fit NBMM for one or more features and output the fit parameters. 
 #' It is used before the function computeVPC.NB(). This function also allows 
-#' to test the presence of heritability via random effect variance of the model.
+#' to test the presence of heritability via random effect variance of the model. To fit a NBMM, the glmmADMB package is needed.
 #' 
 #' @param CountMatrix Sequencing count matrix for a list of features. Each row 
 #' is for one feature, and the columns are for samples.
@@ -270,9 +270,14 @@ getReadMatrix.CP <- function(vec.num.rep, alphas, sigma2s, ps, phis){
 #' ## Compute vpc for each feature under NBMM. This will take a while on the
 #' ##  entire dataset. For the purpose of illustration, here we only fit on 
 #' ##  the first 2 features.
+#' library(glmmADMB)
 #' result.nb <- fit.NB(simData[1:2, ], strains)
 #' @export
 fit.NB <- function(CountMatrix, Strains, test = FALSE){
+  if(!("glmmADMB" %in% installed.packages()[,"Package"])){
+    stop("The function fit.NB() calls glmmadmb() in the 'glmmADMB' package. See http://glmmadmb.r-forge.r-project.org/ for installation details.")
+  }
+  
   if(is.null(dim(CountMatrix))){
     print('Fitting a single feature.')
     CountMatrix <- matrix(CountMatrix, nrow = 1)

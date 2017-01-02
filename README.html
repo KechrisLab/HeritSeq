@@ -167,7 +167,8 @@ library(&quot;HeritSeq&quot;)</code></pre>
 <p>Under NBMM, an observed number of reads aligned to feature/gene <span class="math">\(g\)</span>, <span class="math">\(Y_{gsr}\)</span>, follows a negative binomial distribution with mean <span class="math">\(\mu_{gs}\)</span> and variance <span class="math">\(\mu_{gs}+\phi_{g} \mu_{gs}^2\)</span>, where <span class="math">\(\phi_{g}\)</span> is the dispersion parameter for feature/gene <span class="math">\(g\)</span>, shared across strains. The generalized linear model uses a <span class="math">\(\log\)</span>-link: <span class="math">\(\log(\mu_{gs}) = \alpha_{g}+ b_{gs}, \;\;b_{gs}\sim N(0, \sigma^{2}_{g}).\)</span></p>
 <p>The corresponding heritability score, aka Variance Partition Coefficient (VPC), is <span class="math">\(\frac{e^{\sigma^2_{g}} - 1}{e^{\sigma^2_{g}} - 1 + \phi_{g} e^{\sigma^2_{g}} + e^{-\alpha_g-\sigma^2_{g}/2} }.\)</span></p>
 <p>Compute VPC for all features using NBMM:</p>
-<pre class="r"><code>result.nb &lt;- fit.NB(CountMatrix = simData, Strains = strains, test = FALSE)
+<pre class="r"><code>library(glmmADMB)
+result.nb &lt;- fit.NB(CountMatrix = simData, Strains = strains, test = FALSE)
 vpc.nb &lt;- computeVPC.NB(para = result.nb[[1]])</code></pre>
 <p>The function <em>fit.NB( )</em> returns a list with two objects. The first object is a <span class="math">\(G \times 3\)</span> matrix indicating the fitted parameters for each feature, where <span class="math">\(G\)</span> is the total number of features/genes. The columns are ordered by the fitted parameters <span class="math">\(\alpha_{g}, \sigma^{2}_{g}, \phi_{g}\)</span>. The second object provides the p-value for testing the presence of heritability if test = TRUE; it returns NULL otherwise (default).</p>
 <p>The function <em>computeVPC.NB( )</em> takes in the list of NBMM parameters and outputs the corresponding VPC values.</p>
@@ -294,12 +295,12 @@ cpData &lt;- getReadMatrix.CP(vec.num.rep = rep.num,
 </div>
 <div id="versioning" class="section level2">
 <h2>Versioning</h2>
-<p>Date: 2016-12-12</p>
+<p>Date: 2017-1-2</p>
 <p><strong>Version: 1.0.0</strong></p>
 </div>
 <div id="acknowledgements" class="section level2">
 <h2>Acknowledgements</h2>
-<p>We would like to thank Yanwei (Wayne) Zhang, the cplm package author, for helpful discussions regarding the compound Poisson regression fit in cplm and for providing a modified function before the new version of his package is released.</p>
+<p>We would like to thank Yanwei (Wayne) Zhang, the cplm package author, for helpful discussions regarding the compound Poisson regression fit in cplm and for providing a modified function before the new version of his package was released.</p>
 </div>
 <div id="authors" class="section level2">
 <h2>Authors</h2>
