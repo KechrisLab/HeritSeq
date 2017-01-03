@@ -19,4 +19,4 @@ importFrom(cplm, VarCorr)
 importFrom(lme4, lmer)
 importFrom("stats", "AIC", "formula", "lm", "logLik", "pchisq",
                         "quantile", "rnorm")
-importFrom("utils", "fix")
+importFrom("utils", "fix", "installed.packages")
