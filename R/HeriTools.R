@@ -267,11 +267,13 @@ getReadMatrix.CP <- function(vec.num.rep, alphas, sigma2s, ps, phis){
 #' the hypothesis that random effects \eqn{\sigma_a^2 = 0}{sigma_a2 = 0}; 
 #' otherwise, the second object is NULL. 
 #' @examples
+#' \donttest{
 #' ## Compute vpc for each feature under NBMM. This will take a while on the
 #' ##  entire dataset. For the purpose of illustration, here we only fit on 
 #' ##  the first 2 features.
 #' library(glmmADMB)
 #' result.nb <- fit.NB(simData[1:2, ], strains)
+#' }
 #' @export
 fit.NB <- function(CountMatrix, Strains, test = FALSE){
   if(!("glmmADMB" %in% installed.packages()[,"Package"])){
@@ -476,7 +478,6 @@ computeVPC.NB <- function(para){
 #' otherwise, the second object is NULL. 
 #' 
 #' @examples
-#' \donttest{
 #' ## Fit CPMM for the first two features and test the presence of 
 #' ## heritability. 
 #' result.cp <- fit.CP(simData[1:2, ], strains, test = TRUE)
@@ -484,7 +485,7 @@ computeVPC.NB <- function(para){
 #' para.cp <- result.cp[[1]]
 #' ## Extract p-values
 #' pval.cp <- result.cp[[2]]
-#' }
+#' 
 #' @export
 fit.CP <- function(CountMatrix, Strains, test = FALSE, optimizer = "nlminb"){
   # Fit a compound Poisson mixed effect model for a list of probes/genes and 
@@ -731,11 +732,11 @@ fitandcompute1lmerVPC <- function(CountVector, Strains, PriorWeight = NULL, test
 #' object is NULL. 
 #' 
 #' @examples
-#' ## Compute VPC for each feature under linear mixed models for Gaussian-like datasets. 
+#' ## Compute VPC for the first two features under linear mixed models for Gaussian-like datasets. 
 #' 
 #' ## Provide normalized data and include hypothesis testing on presence of
 #' ## heritability:
-#' result.vst <- fitComputeVPC.lmer(simData_vst, strains, test = TRUE)
+#' result.vst <- fitComputeVPC.lmer(simData_vst[1:2,], strains, test = TRUE)
 #' ## Extract parameters
 #' vpc.vst <- result.vst[[1]]
 #' ## Extract p-values
@@ -810,19 +811,19 @@ fitComputeVPC.lmer <- function(CountMatrix, Strains, PriorWeights = NULL,
 #' \eqn{k \times}num.boot matrix of all bootsrapped VPC values.
 #' 
 #' @examples
+#' \donttest{
 #' ## Compute CI based on 100 bootstrap samples for the first feature 
 #' ##  under NBMM. It takes a few minutes.
-#' \donttest{
 #' NBboot <- getBootCI(simData, strains, 1, 100)
 #' ## Extract CI
 #' NBboot.ci <- NBboot[[1]]
 #' ## Extract vpcs
 #' NBboot.vpc <- NBboot[[2]]
-#' }
 #' 
 #' ## Compute CI based on 100 bootstrap samples for the first feature
 #' ##  under vst. 
 #' VSTboot <- getBootCI(simData, strains, 1, 100, method = "VST")
+#' }
 #' 
 #' @export
 getBootCI = function(CountMatrix, Strains, which.features, num.boot,

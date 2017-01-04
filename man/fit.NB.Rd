@@ -30,10 +30,12 @@ It is used before the function computeVPC.NB(). This function also allows
 to test the presence of heritability via random effect variance of the model. To fit a NBMM, the glmmADMB package is needed.
 }
 \examples{
+\donttest{
 ## Compute vpc for each feature under NBMM. This will take a while on the
 ##  entire dataset. For the purpose of illustration, here we only fit on 
 ##  the first 2 features.
 library(glmmADMB)
 result.nb <- fit.NB(simData[1:2, ], strains)
+}
 }
 

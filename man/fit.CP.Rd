@@ -35,7 +35,6 @@ It is used before the function computeVPC.CP(). This function also allows
 to test the presence of heritability via random effect variance of the model.
 }
 \examples{
-\donttest{
 ## Fit CPMM for the first two features and test the presence of 
 ## heritability. 
 result.cp <- fit.CP(simData[1:2, ], strains, test = TRUE)
@@ -43,6 +42,6 @@ result.cp <- fit.CP(simData[1:2, ], strains, test = TRUE)
 para.cp <- result.cp[[1]]
 ## Extract p-values
 pval.cp <- result.cp[[2]]
-}
+
 }
 

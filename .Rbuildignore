@@ -1,5 +1,9 @@
-^~/Documents///HeritSeq/cran-comments\.md$
-^~/Documents///HeritSeq/cran-comments$
-^~/Documents///HeritSeq/License$
-^~/Documents///HeritSeq/README$
-^~/Documents///HeritSeq/package$
+README.html
+NEWS.md
+README.Rmd
+License.md
+README.pdf
+cran-comments.md
+heritexample_result.Rdata
+package
+

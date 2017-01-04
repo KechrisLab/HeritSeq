@@ -35,11 +35,11 @@ Fit the Gaussian-like data to LMM and compute the VPC values for
 one or more features.
 }
 \examples{
-## Compute VPC for each feature under linear mixed models for Gaussian-like datasets. 
+## Compute VPC for the first two features under linear mixed models for Gaussian-like datasets. 
 
 ## Provide normalized data and include hypothesis testing on presence of
 ## heritability:
-result.vst <- fitComputeVPC.lmer(simData_vst, strains, test = TRUE)
+result.vst <- fitComputeVPC.lmer(simData_vst[1:2,], strains, test = TRUE)
 ## Extract parameters
 vpc.vst <- result.vst[[1]]
 ## Extract p-values
