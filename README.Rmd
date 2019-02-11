@@ -20,9 +20,9 @@ called *simData*. This dataset was generated based on a recombinant inbred mice 
 by the variable *strains*. 
 
 ## Installation
-
 The package requires **R** version >=3.2.3.
 
+### Dependencies
 The installation of dependencies only needs to be done once, if at all.
 Instructions for installing the dependencies:
 ```{r, eval = FALSE}
@@ -47,16 +47,22 @@ For some systems an [alternative installation]( http://glmmadmb.r-forge.r-projec
 Since R for OS X Maverick (and latter versions) was compiled using gfortran-4.8, Mac users might receive a “-lgfortran” error when installing the cplm package. This problem and its solution are stated [here]( http://thecoatlessprofessor.com/programming/rcpp-rcpparmadillo-and-os-x-mavericks-lgfortran-and-lquadmath-error/).
 
 
-Next, download the [package tarball](https://github.com/KechrisLab/HeritSeq/blob/master/package/HeritSeq_1.0.0.tar.gz) and install the package:
+### Direct installation from CRAN
+```{r, eval = FALSE}
+install.packages("HeritSeq", repos="http://cran.r-project.org")
+```
+
+
+### Tarball installation
+Download the [package tarball](https://github.com/KechrisLab/HeritSeq/blob/master/package/HeritSeq_1.0.1.tar.gz) and install the package:
 
 ```{r, eval = FALSE}
-install.packages("HeritSeq_1.0.0.tar.gz",repos=NULL,type="source")
+install.packages("HeritSeq_1.0.1.tar.gz",repos=NULL,type="source")
 library("HeritSeq")
 ```
 ```{r, echo = FALSE}
 setwd("~/Documents/heritseq/")
 load("data/heritseq_example.RData")
-# source("R/HeriToolsV12.R")
 ```
 
 ## Estimate heritability scores
