@@ -1,7 +1,7 @@
 Package: HeritSeq
 Title: Heritability of Gene Expression for Next-Generation Sequencing
-Version: 1.0.0
-Date: 2017-1-2
+Version: 1.0.1
+Date: 2019-02-11
 Author: W. Jenny Shi [aut, cre],
     Pamela Russell [aut],
     Pratyaydipta Rudra [aut, cre],
@@ -13,20 +13,17 @@ Description: Statistical framework to analyze heritability of gene expression
     based on next-generation sequencing data and simulating sequencing reads. 
     Variance partition coefficients (VPC) are computed using linear mixed effects 
     and generalized linear mixed effects models. Compound Poisson and negative 
-    binomial models are included.
-Depends:
-    R (>= 3.2.3)
+    binomial models are included. Reference: Rudra, Pratyaydipta, et al. "Model based heritability scores for high-throughput sequencing data." BMC bioinformatics 18.1 (2017): 143.
+BugReports: https://github.com/KechrisLab/HeritSeq/issues
+Depends: R (>= 3.2.3)
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
-Imports:
-    cplm,
-    DESeq2,
-    lme4,
-    pbapply,
-    tweedie,
-    MASS,
-    SummarizedExperiment
-Suggests:
-    glmmADMB
+Imports: cplm, DESeq2, lme4, pbapply, tweedie, MASS,
+        SummarizedExperiment
+Suggests: glmmADMB
+Additional_repositories: http://glmmadmb.r-forge.r-project.org/repos
 RoxygenNote: 5.0.1
+NeedsCompilation: no
+Packaged: 2017-01-04 07:44:16 UTC; wenjennyshi
+
